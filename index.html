@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iSnow 愛雪 — 滑雪愛好者的天地</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#hero">
+      <span class="logo-icon">❄</span>
+      <span class="logo-text">i<strong>Snow</strong> <span class="logo-zh">愛雪</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#equipment">裝備清單</a></li>
+      <li><a href="#resorts">亞洲雪場</a></li>
+      <li><a href="#casi">CASI 1級</a></li>
+      <li><a href="#contact" class="nav-cta">立即出發</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="選單">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== MOBILE OVERLAY ===== -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<!-- ===== MOBILE DRAWER ===== -->
+<div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+  <div class="mobile-drawer-inner">
+    <a href="#equipment" class="mobile-nav-item">
+      <span class="mnav-label">
+        <span class="mnav-icon">🎿</span>
+        <span>裝備清單</span>
+      </span>
+      <span class="mnav-arrow">›</span>
+    </a>
+    <a href="#resorts" class="mobile-nav-item">
+      <span class="mnav-label">
+        <span class="mnav-icon">🏔️</span>
+        <span>亞洲雪場</span>
+      </span>
+      <span class="mnav-arrow">›</span>
+    </a>
+    <a href="#casi" class="mobile-nav-item">
+      <span class="mnav-label">
+        <span class="mnav-icon">🏅</span>
+        <span>CASI 1 級</span>
+      </span>
+      <span class="mnav-arrow">›</span>
+    </a>
+    <a href="#contact" class="mobile-nav-cta">立即出發 ❄</a>
+  </div>
+</div>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="snowflakes" aria-hidden="true" id="snowflakes"></div>
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Welcome to the Mountains</p>
+    <h1 class="hero-title">
+      <span class="title-i">i</span><span class="title-snow">Snow</span>
+      <span class="title-zh">愛雪</span>
+    </h1>
+    <p class="hero-subtitle">乘著白色浪潮，感受速度與自由。<br>從裝備到技術，從亞洲雪場到國際認證，我們陪你走上每一條雪道。</p>
+    <div class="hero-actions">
+      <a href="#equipment" class="btn btn-primary">探索滑雪世界</a>
+      <a href="#casi" class="btn btn-ghost">了解 CASI 認證</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">50+</span><span class="stat-label">亞洲頂級雪場</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num">100+</span><span class="stat-label">必備裝備項目</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num">CASI</span><span class="stat-label">國際認證標準</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>向下探索</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ===== EQUIPMENT ===== -->
+<section id="equipment" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Equipment</span>
+      <h2 class="section-title">滑雪裝備清單</h2>
+      <p class="section-desc">完整的行前裝備準備，讓你在雪場安全又盡興。從頭到腳一覽無遺。</p>
+    </div>
+
+    <div class="eq-tabs">
+      <button class="eq-tab active" data-tab="body">護具 &amp; 衣物</button>
+      <button class="eq-tab" data-tab="ski">雪具 &amp; 器材</button>
+      <button class="eq-tab" data-tab="access">配件 &amp; 科技</button>
+    </div>
+
+    <div class="eq-panel active" id="tab-body">
+      <div class="eq-grid">
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🪖</div>
+          <div class="eq-info">
+            <h3>雪盔 / 滑雪頭盔</h3>
+            <p>最重要的護具，保護頭部免於撞擊。選擇符合 ASTM F2040 或 EN 1077 認證款式。</p>
+            <ul class="eq-tips">
+              <li>試戴確認無晃動</li>
+              <li>配合護目鏡尺寸選購</li>
+              <li>每 5 年或碰撞後更換</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🥽</div>
+          <div class="eq-info">
+            <h3>護目鏡 (Goggle)</h3>
+            <p>阻擋紫外線、強光與風雪，維持清晰視線。雙層鏡片可防霧。</p>
+            <ul class="eq-tips">
+              <li>S1–S3 鏡片適應不同天氣</li>
+              <li>磁吸換片款便利實用</li>
+              <li>頭盔相容性需確認</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🧥</div>
+          <div class="eq-info">
+            <h3>滑雪外套</h3>
+            <p>防水防風、透氣保暖的三合一功能夾克，雪場的第一道防護。</p>
+            <ul class="eq-tips">
+              <li>防水指數 10,000mm 以上</li>
+              <li>透濕指數 10,000g 以上</li>
+              <li>腋下通風拉鍊散熱</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">👖</div>
+          <div class="eq-info">
+            <h3>滑雪褲</h3>
+            <p>防水耐磨，護臀墊款式提供額外保護，加厚膝蓋設計增加耐久性。</p>
+            <ul class="eq-tips">
+              <li>吊帶款保暖效果更佳</li>
+              <li>確認褲腳與靴子尺寸相容</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🧤</div>
+          <div class="eq-info">
+            <h3>滑雪手套</h3>
+            <p>防水保暖，護腕設計防止跌倒時手腕受傷。</p>
+            <ul class="eq-tips">
+              <li>五指款操作靈活</li>
+              <li>連指款保暖性更高</li>
+              <li>觸控螢幕指尖更實用</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🧦</div>
+          <div class="eq-info">
+            <h3>滑雪專用襪</h3>
+            <p>高筒設計至膝蓋，美麗諾羊毛材質，避免靴子摩擦水泡。</p>
+            <ul class="eq-tips">
+              <li>切勿穿棉襪（易濕冷）</li>
+              <li>準備 2–3 雙替換</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">🩱</div>
+          <div class="eq-info">
+            <h3>排汗內衣 (Base Layer)</h3>
+            <p>貼身排汗層，將水分導離皮膚，維持乾爽舒適。</p>
+            <ul class="eq-tips">
+              <li>美麗諾羊毛保暖兼防臭</li>
+              <li>避免選純棉款</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">🛡️</div>
+          <div class="eq-info">
+            <h3>護臀 / 護膝護具</h3>
+            <p>初學者必備！護臀短褲保護尾骨，護膝保護膝關節。</p>
+            <ul class="eq-tips">
+              <li>穿於滑雪褲內側</li>
+              <li>初學期間強烈建議使用</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-opt">
+          <div class="eq-icon">🧣</div>
+          <div class="eq-info">
+            <h3>脖圍 / 面罩</h3>
+            <p>保護臉部與頸部免於寒風侵襲，Buff 或 Balaclava 均可。</p>
+          </div>
+          <span class="eq-badge opt">選配</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="eq-panel" id="tab-ski">
+      <div class="eq-grid">
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🎿</div>
+          <div class="eq-info">
+            <h3>滑雪板 (Ski)</h3>
+            <p>初學者建議選擇身高減 10–15cm 長度，Rocker 板型易操控。</p>
+            <ul class="eq-tips">
+              <li>全山板適合多場地</li>
+              <li>腰寬 80–90mm 通用性佳</li>
+              <li>租借可在當地雪場辦理</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">👟</div>
+          <div class="eq-info">
+            <h3>滑雪靴 (Ski Boot)</h3>
+            <p>最影響技術傳遞的裝備，合腳比品牌更重要。需專業試穿。</p>
+            <ul class="eq-tips">
+              <li>靴型：窄、中、寬楦</li>
+              <li>Flex 指數越高越硬</li>
+              <li>熱塑鞋墊提升貼合度</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🔗</div>
+          <div class="eq-info">
+            <h3>固定器 (Binding)</h3>
+            <p>連接靴子與雪板，DIN 值設定需依體重與技術等級調整。</p>
+            <ul class="eq-tips">
+              <li>需由專業技師安裝調整</li>
+              <li>確認預扭力設定正確</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🥢</div>
+          <div class="eq-info">
+            <h3>雪仗 (Ski Pole)</h3>
+            <p>輔助轉向、維持平衡，站立時把手至腋下為適當長度。</p>
+            <ul class="eq-tips">
+              <li>鋁合金輕量化</li>
+              <li>碳纖維更輕但較脆</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">🔧</div>
+          <div class="eq-info">
+            <h3>熱蠟 / 打蠟服務</h3>
+            <p>保持底板滑順，增強操控性。每 3–5 天或視雪況補蠟。</p>
+            <ul class="eq-tips">
+              <li>可在雪場租借站辦理</li>
+              <li>Fluoro 蠟禁止競技賽事使用</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">🎒</div>
+          <div class="eq-info">
+            <h3>雪場背包</h3>
+            <p>10–20L 容量，防水材質，可存放保暖層、水壺、雪具零件。</p>
+            <ul class="eq-tips">
+              <li>護脊背板提升安全性</li>
+              <li>雪具攜帶綁帶加分</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="eq-panel" id="tab-access">
+      <div class="eq-grid">
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">🧴</div>
+          <div class="eq-info">
+            <h3>高係數防曬乳 SPF50+</h3>
+            <p>雪地紫外線強度是平地的兩倍，每 2 小時補塗一次，尤其鼻尖耳朵。</p>
+            <ul class="eq-tips">
+              <li>物理性防曬更耐用</li>
+              <li>護唇膏同樣重要</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-must">
+          <div class="eq-icon">💧</div>
+          <div class="eq-info">
+            <h3>保溫水壺</h3>
+            <p>高山乾燥環境容易脫水，保溫瓶防止飲用水結凍。</p>
+            <ul class="eq-tips">
+              <li>500–750ml 容量足夠半天</li>
+              <li>熱飲補充熱量效果佳</li>
+            </ul>
+          </div>
+          <span class="eq-badge must">必備</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">📱</div>
+          <div class="eq-info">
+            <h3>運動相機 (Action Cam)</h3>
+            <p>記錄雪道精彩時刻，GoPro / Insta360 均為熱門選擇。</p>
+            <ul class="eq-tips">
+              <li>頭盔頂部安裝最穩定</li>
+              <li>低溫電池消耗快，備用電池必備</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">⌚</div>
+          <div class="eq-info">
+            <h3>GPS 運動手錶</h3>
+            <p>記錄速度、海拔、距離，Garmin / Suunto 等品牌均有雪場模式。</p>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-rec">
+          <div class="eq-icon">🔋</div>
+          <div class="eq-info">
+            <h3>暖暖包 / 電暖手套</h3>
+            <p>應對極寒天氣，貼式暖暖包放入手套或靴子中效果極佳。</p>
+            <ul class="eq-tips">
+              <li>USB 充電式電暖手套更環保</li>
+            </ul>
+          </div>
+          <span class="eq-badge rec">推薦</span>
+        </div>
+
+        <div class="eq-card priority-opt">
+          <div class="eq-icon">🩹</div>
+          <div class="eq-info">
+            <h3>急救小藥包</h3>
+            <p>止痛藥、肌肉貼布、OK繃，雪場意外時的第一時間處理。</p>
+          </div>
+          <span class="eq-badge opt">選配</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="eq-checklist-bar">
+      <div class="checklist-info">
+        <span class="badge-legend must-l">必備</span>
+        <span class="badge-legend rec-l">推薦</span>
+        <span class="badge-legend opt-l">選配</span>
+      </div>
+      <a href="#" class="btn btn-outline" onclick="window.print(); return false;">列印清單</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESORTS ===== -->
+<section id="resorts" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Asia Resorts</span>
+      <h2 class="section-title">亞洲頂級滑雪勝地</h2>
+      <p class="section-desc">從北海道的粉雪天堂到韓國的現代雪場，亞洲擁有世界級的滑雪體驗。</p>
+    </div>
+
+    <div class="resort-filter">
+      <button class="resort-filter-btn active" data-country="all">全部</button>
+      <button class="resort-filter-btn" data-country="jp">🇯🇵 日本</button>
+      <button class="resort-filter-btn" data-country="kr">🇰🇷 韓國</button>
+      <button class="resort-filter-btn" data-country="cn">🇨🇳 中國</button>
+      <button class="resort-filter-btn" data-country="other">其他</button>
+    </div>
+
+    <div class="resort-grid" id="resortGrid">
+
+      <div class="resort-card" data-country="jp">
+        <div class="resort-img resort-niseko"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇯🇵</div>
+          <h3>Niseko United</h3>
+          <p class="resort-loc">北海道，倶知安町</p>
+          <div class="resort-stats">
+            <span>⛰ 1,308m</span>
+            <span>📐 888ha</span>
+            <span>🎿 60+ 道</span>
+          </div>
+          <p class="resort-desc">全球粉雪愛好者的聖地，年均雪量超過 15 公尺，輕鬆粉雪 (Champagne Powder) 舉世聞名。四座山頭互聯，夜滑設施完善。</p>
+          <div class="resort-tags">
+            <span class="tag">粉雪天堂</span>
+            <span class="tag">樹林滑雪</span>
+            <span class="tag">夜滑</span>
+            <span class="tag">全等級</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">12月 — 4月</span>
+            <span class="resort-level level-all">適合全等級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card featured" data-country="jp">
+        <div class="resort-img resort-hakuba"></div>
+        <div class="resort-featured-badge">精選推薦</div>
+        <div class="resort-content">
+          <div class="resort-flag">🇯🇵</div>
+          <h3>白馬八方尾根</h3>
+          <p class="resort-loc">長野縣，白馬村</p>
+          <div class="resort-stats">
+            <span>⛰ 1,831m</span>
+            <span>📐 220ha</span>
+            <span>🎿 43 道</span>
+          </div>
+          <p class="resort-desc">1998 年長野冬奧大迴轉賽場，坡度挑戰性強。黑菱壁道為日本最難能挑戰道之一，同時擁有適合初學的緩坡區域。</p>
+          <div class="resort-tags">
+            <span class="tag">奧運場地</span>
+            <span class="tag">陡坡挑戰</span>
+            <span class="tag">溫泉</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">12月 — 5月</span>
+            <span class="resort-level level-adv">中高級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="jp">
+        <div class="resort-img resort-furano"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇯🇵</div>
+          <h3>富良野滑雪場</h3>
+          <p class="resort-loc">北海道，富良野市</p>
+          <div class="resort-stats">
+            <span>⛰ 1,076m</span>
+            <span>📐 194ha</span>
+            <span>🎿 26 道</span>
+          </div>
+          <p class="resort-desc">FIS 世界杯賽場，北海道最受歡迎雪場之一。雪質細膩乾燥，少有遊客擁擠，適合追求安靜雪道體驗的滑雪者。</p>
+          <div class="resort-tags">
+            <span class="tag">世界杯場地</span>
+            <span class="tag">乾燥粉雪</span>
+            <span class="tag">美食</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">12月 — 3月</span>
+            <span class="resort-level level-mid">中級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="kr">
+        <div class="resort-img resort-alpensia"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇰🇷</div>
+          <h3>Alpensia 滑雪度假村</h3>
+          <p class="resort-loc">江原道，平昌</p>
+          <div class="resort-stats">
+            <span>⛰ 1,069m</span>
+            <span>📐 100ha</span>
+            <span>🎿 6 道</span>
+          </div>
+          <p class="resort-desc">2018 年平昌冬奧舉辦地，設施現代化一流。跳台滑雪台與越野滑雪設施保留至今，可體驗奧運場地的震撼感。</p>
+          <div class="resort-tags">
+            <span class="tag">2018 冬奧</span>
+            <span class="tag">現代設施</span>
+            <span class="tag">度假村</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">11月 — 3月</span>
+            <span class="resort-level level-all">適合全等級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="kr">
+        <div class="resort-img resort-yongpyong"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇰🇷</div>
+          <h3>龍平滑雪度假村</h3>
+          <p class="resort-loc">江原道，平昌</p>
+          <div class="resort-stats">
+            <span>⛰ 1,458m</span>
+            <span>📐 220ha</span>
+            <span>🎿 31 道</span>
+          </div>
+          <p class="resort-desc">韓國最大型滑雪度假村，FIS 世界杯常客。Dragon Plaza 購物商場與多元住宿設施，非常適合家庭與團體旅遊。</p>
+          <div class="resort-tags">
+            <span class="tag">韓國最大</span>
+            <span class="tag">家庭友善</span>
+            <span class="tag">購物美食</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">11月 — 3月</span>
+            <span class="resort-level level-all">適合全等級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="cn">
+        <div class="resort-img resort-zhangjiakou"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇨🇳</div>
+          <h3>張家口崇禮滑雪區</h3>
+          <p class="resort-loc">河北省，崇禮區</p>
+          <div class="resort-stats">
+            <span>⛰ 2,090m</span>
+            <span>📐 800ha+</span>
+            <span>🎿 100+ 道</span>
+          </div>
+          <p class="resort-desc">2022 北京冬奧賽場，聚集雲頂、太舞、萬龍等多個世界級雪場。從北京乘坐高鐵僅需 50 分鐘，交通極為便利。</p>
+          <div class="resort-tags">
+            <span class="tag">2022 冬奧</span>
+            <span class="tag">高鐵直達</span>
+            <span class="tag">多場連滑</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">11月 — 3月</span>
+            <span class="resort-level level-all">適合全等級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="other">
+        <div class="resort-img resort-malam"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇰🇿</div>
+          <h3>Shymbulak 滑雪度假村</h3>
+          <p class="resort-loc">哈薩克，阿拉木圖</p>
+          <div class="resort-stats">
+            <span>⛰ 3,163m</span>
+            <span>📐 200ha</span>
+            <span>🎿 12+ 道</span>
+          </div>
+          <p class="resort-desc">中亞最著名的高山滑雪場，距哈薩克最大城市阿拉木圖僅 25 公里。天山山脈的壯麗景色令人屏息，乾燥粉雪品質優秀。</p>
+          <div class="resort-tags">
+            <span class="tag">中亞最高</span>
+            <span class="tag">天山美景</span>
+            <span class="tag">粉雪</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">11月 — 4月</span>
+            <span class="resort-level level-mid">中高級</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resort-card" data-country="other">
+        <div class="resort-img resort-gulmarg"></div>
+        <div class="resort-content">
+          <div class="resort-flag">🇮🇳</div>
+          <h3>Gulmarg 滑雪場</h3>
+          <p class="resort-loc">印度，查謨克什米爾</p>
+          <div class="resort-stats">
+            <span>⛰ 4,390m</span>
+            <span>📐 400ha</span>
+            <span>🎿 20+ 道</span>
+          </div>
+          <p class="resort-desc">全球海拔最高的滑雪場之一，纜車直達 4,390 公尺。喜馬拉雅山脈原始粉雪，近年成為探索型滑雪者的秘密目的地。</p>
+          <div class="resort-tags">
+            <span class="tag">極高海拔</span>
+            <span class="tag">喜馬拉雅</span>
+            <span class="tag">探索路線</span>
+          </div>
+          <div class="resort-meta">
+            <span class="resort-season">12月 — 3月</span>
+            <span class="resort-level level-adv">進階推薦</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CASI ===== -->
+<section id="casi" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">CASI Level 1</span>
+      <h2 class="section-title">CASI 1 級滑行標準</h2>
+      <p class="section-desc">加拿大滑雪教練聯盟 (CASI) 認證是亞洲最受認可的滑雪教練資格，Level 1 為入門基礎認證。</p>
+    </div>
+
+    <div class="casi-intro">
+      <div class="casi-logo-block">
+        <div class="casi-logo-circle">
+          <span class="casi-logo-text">CASI</span>
+          <span class="casi-logo-sub">Level 1</span>
+        </div>
+        <p>Canadian Association of Snowsport Instructors<br><strong>加拿大滑雪運動教練協會</strong></p>
+      </div>
+      <div class="casi-overview">
+        <h3>認證概覽</h3>
+        <div class="overview-grid">
+          <div class="overview-item">
+            <span class="ov-label">課程時長</span>
+            <span class="ov-val">3–5 天</span>
+          </div>
+          <div class="overview-item">
+            <span class="ov-label">考核形式</span>
+            <span class="ov-val">滑行示範 + 教學實習</span>
+          </div>
+          <div class="overview-item">
+            <span class="ov-label">前提條件</span>
+            <span class="ov-val">具備中級以上滑行能力</span>
+          </div>
+          <div class="overview-item">
+            <span class="ov-label">國際認可</span>
+            <span class="ov-val">超過 30 個國家承認</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="casi-pillars">
+      <h3 class="pillars-title">三大核心評估領域</h3>
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <div class="pillar-icon">🎿</div>
+          <h4>技術滑行 (Technical Skiing)</h4>
+          <p>考官評估候選人在不同地形與速度下的滑行技術品質</p>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon">👩‍🏫</div>
+          <h4>教學能力 (Teaching)</h4>
+          <p>能否有效傳授技術給初學者，包含溝通、示範與回饋給予</p>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon">🏔️</div>
+          <h4>山地知識 (Mountain Knowledge)</h4>
+          <p>雪場安全規範、氣象知識、雪崩意識及責任管理</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="standards-title">Level 1 技術滑行標準細則</h3>
+    <div class="casi-standards">
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">01</span>
+          <h4>直滑降 (Straight Running)</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>平衡姿勢</strong>
+              <p>重心居中，微彎膝蓋與髖關節，雙臂自然前舉維持平衡，視線朝向前方雪道。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>雪板控制</strong>
+              <p>雙板平行，均勻承重，能在不同坡度維持穩定滑行，無明顯翻翹或顫抖。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">02</span>
+          <h4>基本轉向 (Basic Turns)</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>犁式轉向 (Snowplow / Wedge Turns)</strong>
+              <p>雪板呈 V 型犁形，以加壓內側板刃完成左右轉向，能有效控制速度與方向，適用於緩至中等坡度。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>長弧轉向節奏</strong>
+              <p>轉向半徑一致，轉向之間有清晰的完成相，能維持規律節奏連續完成至少 6 個轉向。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>平行轉向入門</strong>
+              <p>展示犁式轉向向平行雪板的過渡，重心轉移流暢，能完成初步的平行轉向嘗試。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">03</span>
+          <h4>側滑 (Sideslipping)</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>正面側滑</strong>
+              <p>面朝山谷，雙板橫越斜坡，以鬆放板刃控制下滑速度，能均勻側滑至少 10 公尺。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>背面側滑</strong>
+              <p>面朝山坡，操作方式相同，板刃控制更細膩，為進階技術奠定基礎。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>板刃角度控制</strong>
+              <p>展示對板刃角度的敏感度，能以細微調整控制側滑速度，避免失控加速。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">04</span>
+          <h4>速度與地形控制</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>適當速度管理</strong>
+              <p>在綠線 (初學道) 與藍線 (中級道) 上，能根據地形與雪況調整滑行速度，不對他人造成危險。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>急停技術</strong>
+              <p>在任意位置能以側滑或轉向方式安全完全停止，停止距離在合理範圍內。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">05</span>
+          <h4>搭乘纜車與雪場禮儀</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>索椅纜車操作</strong>
+              <p>獨立完成搭乘與下車，下車後立即離開下車區域，不妨礙後方乘客。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>FIS 雪場行為守則</strong>
+              <p>理解並遵守 FIS 十條守則，包含超越規則、優先路權及雪道標誌識別。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="std-category">
+        <div class="std-cat-header">
+          <span class="std-num">06</span>
+          <h4>教學示範要求</h4>
+        </div>
+        <div class="std-items">
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>初學者課程設計</strong>
+              <p>能規劃一節 60 分鐘的初學者課程，包含穿脫裝備、走路移動、直滑降與犁式轉向教學流程。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>示範與解說能力</strong>
+              <p>展示清晰的動作示範，搭配簡單易懂的口語說明，能針對學員的常見錯誤提供回饋。</p>
+            </div>
+          </div>
+          <div class="std-item">
+            <span class="std-check">✓</span>
+            <div>
+              <strong>安全意識傳達</strong>
+              <p>在課程中主動告知學員雪場安全規範，創造安全的學習環境。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="casi-cta-block">
+      <div class="casi-cta-content">
+        <h3>準備好考取 CASI Level 1 了嗎？</h3>
+        <p>建議先累積至少一個雪季的規律練習，能流暢完成中級道的平行轉向後再報名考試，成功率將大幅提升。</p>
+      </div>
+      <div class="casi-cta-steps">
+        <div class="cta-step"><span>1</span><p>確認中級道滑行能力</p></div>
+        <div class="cta-step"><span>2</span><p>報名 CASI 官方認證課程</p></div>
+        <div class="cta-step"><span>3</span><p>完成 3–5 天密集訓練</p></div>
+        <div class="cta-step"><span>4</span><p>通過考核，取得國際認證</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT / CTA ===== -->
+<section id="contact" class="section section-cta">
+  <div class="snowflakes-bg" id="snowflakes2"></div>
+  <div class="container">
+    <div class="cta-content">
+      <span class="section-tag">Join iSnow</span>
+      <h2>準備好踏上雪道了嗎？</h2>
+      <p>加入 iSnow 愛雪社群，與數千名滑雪愛好者一起分享雪場資訊、技術心得與旅遊攻略。</p>
+      <form class="cta-form" id="ctaForm">
+        <input type="email" placeholder="輸入您的 Email 地址" required />
+        <button type="submit" class="btn btn-primary">立即加入</button>
+      </form>
+      <p class="cta-fine">我們不會濫發郵件，隨時可取消訂閱。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="nav-logo" href="#hero">
+          <span class="logo-icon">❄</span>
+          <span class="logo-text">i<strong>Snow</strong> <span class="logo-zh">愛雪</span></span>
+        </a>
+        <p>讓每一次在雪道上的體驗，都成為生命中最美的記憶。</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>探索</h5>
+          <ul>
+            <li><a href="#equipment">裝備清單</a></li>
+            <li><a href="#resorts">亞洲雪場</a></li>
+            <li><a href="#casi">CASI 認證</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>關於</h5>
+          <ul>
+            <li><a href="#">關於 iSnow</a></li>
+            <li><a href="#">聯絡我們</a></li>
+            <li><a href="#">隱私政策</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 iSnow 愛雪. All rights reserved.</p>
+      <p class="footer-tagline">Powered by passion for powder ❄</p>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
