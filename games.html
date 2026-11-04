@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="腦力勇者" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>腦力勇者 — 數觸之戰．地下迷宮</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="games.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="topbar">
+    <a href="index.html" class="topbar-back" id="homeLink" aria-label="返回 iSnow 主頁">‹ iSnow</a>
+    <div class="topbar-status" aria-live="polite">
+      <span class="lv-badge">Lv <b id="tbLevel">1</b></span>
+      <span class="exp-track" aria-hidden="true"><span class="exp-fill" id="tbExp"></span></span>
+    </div>
+    <button class="icon-btn mute-toggle" id="muteBtn" aria-label="音效開關" aria-pressed="false">🔊</button>
+  </header>
+
+  <!-- ===== SCREEN: MENU（冒險據點）===== -->
+  <main class="screen screen-menu active" id="screen-menu">
+    <div class="menu-inner">
+      <div class="window title-window">
+        <p class="eyebrow">⚔ 冒險據點 ⚔</p>
+        <h1 class="game-title">腦力勇者</h1>
+        <p class="title-sub">勇者大人，歡迎歸來。<br>今日要接受哪一個任務？</p>
+      </div>
+
+      <div class="quest-list">
+        <button class="quest-card" data-quest="schulte">
+          <span class="quest-icon" aria-hidden="true">🐉</span>
+          <span class="quest-body">
+            <span class="quest-name">數觸之戰</span>
+            <span class="quest-desc">按 1、2、3… 順序點擊數字，每點中一下就攻擊魔物一次。越快擊倒，戰績越高。</span>
+            <span class="quest-tags"><span class="tag">專注力</span><span class="tag">視覺搜索</span><span class="tag">反應</span></span>
+          </span>
+          <span class="quest-arrow" aria-hidden="true">▶</span>
+        </button>
+
+        <button class="quest-card" data-quest="maze">
+          <span class="quest-icon" aria-hidden="true">🏰</span>
+          <span class="quest-body">
+            <span class="quest-name">地下迷宮</span>
+            <span class="quest-desc">帶領勇者穿越迷宮，沿途收集寶石，奪取最深處的王冠。</span>
+            <span class="quest-tags"><span class="tag">空間記憶</span><span class="tag">規劃</span><span class="tag">方向感</span></span>
+          </span>
+          <span class="quest-arrow" aria-hidden="true">▶</span>
+        </button>
+      </div>
+
+      <div class="window record-window">
+        <h2 class="window-heading">冒險紀錄</h2>
+        <div class="record-hero">
+          <div class="record-lv">
+            <span class="record-lv-label">等級</span>
+            <span class="record-lv-num" id="recLevel">1</span>
+          </div>
+          <div class="record-hero-info">
+            <div class="record-title" id="recTitle">見習冒險者</div>
+            <div class="exp-track big" aria-hidden="true"><span class="exp-fill" id="recExp"></span></div>
+            <div class="record-exp-text" id="recExpText">經驗值 0 / 100</div>
+          </div>
+        </div>
+        <dl class="record-grid" id="recGrid"></dl>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCREEN: 數觸之戰 ===== -->
+  <section class="screen screen-game" id="screen-schulte" aria-label="數觸之戰">
+    <div class="hud">
+      <button class="hud-btn" data-action="retreat">‹ 撤退</button>
+      <div class="hud-timer" id="sTimer" aria-label="計時">0.0<small>秒</small></div>
+      <div class="hud-chip">失誤 <b id="sMiss">0</b></div>
+      <button class="icon-btn mute-toggle" aria-label="音效開關" aria-pressed="false">🔊</button>
+    </div>
+
+    <div class="stage">
+      <div class="battle-panel window">
+        <div class="enemy">
+          <div class="enemy-sprite" id="sEnemy" aria-hidden="true">🦇</div>
+          <div class="enemy-info">
+            <div class="enemy-name" id="sEnemyName">洞窟蝙蝠</div>
+            <div class="hp-track"><span class="hp-fill" id="sHp"></span></div>
+          </div>
+        </div>
+        <div class="next-target">
+          <span class="next-label">下一個</span>
+          <span class="next-num" id="sNext">1</span>
+        </div>
+        <p class="battle-msg" id="sMsg" aria-live="polite">▶ 魔物出現了！</p>
+      </div>
+
+      <div class="board-area">
+        <div class="board schulte-grid" id="sGrid" role="grid" aria-label="數字表"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN: 地下迷宮 ===== -->
+  <section class="screen screen-game" id="screen-maze" aria-label="地下迷宮">
+    <div class="hud">
+      <button class="hud-btn" data-action="retreat">‹ 撤退</button>
+      <div class="hud-timer" id="mTimer" aria-label="計時">0.0<small>秒</small></div>
+      <div class="hud-chip">💎 <b id="mGems">0/0</b></div>
+      <button class="icon-btn mute-toggle" aria-label="音效開關" aria-pressed="false">🔊</button>
+    </div>
+
+    <div class="stage">
+      <div class="board-area">
+        <div class="board maze-board" id="mBoard">
+          <canvas id="mCanvas" aria-label="迷宮地圖，用方向鍵或滑動移動勇者"></canvas>
+        </div>
+      </div>
+
+      <div class="dpad-panel">
+        <p class="battle-msg maze-msg" id="mMsg" aria-live="polite">▶ 找出通往王冠的路！</p>
+        <div class="dpad" role="group" aria-label="方向鍵">
+          <button class="dpad-btn up"    data-dir="up"    aria-label="向上">▲</button>
+          <button class="dpad-btn left"  data-dir="left"  aria-label="向左">◀</button>
+          <span class="dpad-center" aria-hidden="true">🧙</span>
+          <button class="dpad-btn right" data-dir="right" aria-label="向右">▶</button>
+          <button class="dpad-btn down"  data-dir="down"  aria-label="向下">▼</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OVERLAY: 難度選擇 ===== -->
+  <div class="overlay" id="diffOverlay" role="dialog" aria-modal="true" aria-labelledby="diffTitle" hidden>
+    <div class="window command-window">
+      <h2 class="window-heading" id="diffTitle">選擇難度</h2>
+      <p class="command-sub" id="diffSub"></p>
+      <div class="command-list" id="diffList"></div>
+      <button class="text-btn" data-action="close-diff">返回據點</button>
+    </div>
+  </div>
+
+  <!-- ===== OVERLAY: 開場倒數 ===== -->
+  <div class="countdown" id="countdown" aria-live="assertive" hidden>
+    <div class="countdown-intro" id="cdIntro"></div>
+    <div class="countdown-num" id="cdNum"></div>
+  </div>
+
+  <!-- ===== OVERLAY: 戰果 ===== -->
+  <div class="overlay" id="resultOverlay" role="dialog" aria-modal="true" aria-labelledby="resTitle" hidden>
+    <div class="window result-window">
+      <div class="result-main">
+        <p class="result-eyebrow" id="resEyebrow">VICTORY</p>
+        <h2 class="result-title" id="resTitle">戰鬥勝利！</h2>
+        <div class="result-stars" id="resStars" aria-label="評價"></div>
+        <div class="result-time">
+          <span class="result-time-label">用時</span>
+          <span class="result-time-num" id="resTime">0.0</span>
+        </div>
+        <p class="result-note">
+          <span class="result-badge" id="resBadge" hidden>🏆 新紀錄！</span>
+          <span class="result-compare" id="resCompare" hidden></span>
+        </p>
+      </div>
+      <div class="result-side">
+        <ul class="result-stats" id="resStats"></ul>
+        <p class="result-exp" id="resExp"></p>
+        <p class="result-unlock" id="resUnlock" hidden>🔓 魔王級已解鎖！</p>
+        <div class="levelup" id="resLevelUp" hidden>
+          <div class="levelup-text">等級提升！</div>
+          <div class="levelup-detail" id="resLevelDetail"></div>
+        </div>
+        <div class="result-actions">
+          <button class="cmd-btn primary" data-action="again">▶ 再戰一次</button>
+          <button class="cmd-btn" data-action="change-diff">轉難度</button>
+          <button class="cmd-btn" data-action="home">返回據點</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== OVERLAY: 撤退確認 ===== -->
+  <div class="overlay" id="retreatOverlay" role="dialog" aria-modal="true" aria-labelledby="retreatTitle" hidden>
+    <div class="window command-window small">
+      <h2 class="window-heading" id="retreatTitle">要撤退嗎？</h2>
+      <p class="command-sub">今次戰鬥的進度不會保存。</p>
+      <div class="command-list">
+        <button class="cmd-btn" data-action="retreat-yes">▶ 撤退，返回據點</button>
+        <button class="cmd-btn primary" data-action="retreat-no">繼續戰鬥</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="games.js"></script>
+</body>
+</html>
