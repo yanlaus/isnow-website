@@ -9,12 +9,14 @@ import { MenuView } from './menu.js';
 import { SchulteView } from './schulte.js';
 import { MazeView } from './maze.js';
 import { MemoryView } from './memory.js';
+import { SimonView } from './simon.js';
 
 /* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
 const VIEW_CLASSES = {
   schulte: SchulteView,
   maze: MazeView,
   memory: MemoryView,
+  simon: SimonView,
 };
 
 const $ = (s, r = document) => r.querySelector(s);
