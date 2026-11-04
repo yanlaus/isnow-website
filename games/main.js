@@ -13,6 +13,7 @@ import { SimonView } from './simon.js';
 import { StrokeView } from './stroke.js';
 import { MahjongView } from './mahjong.js';
 import { WhackView } from './whack.js';
+import { ShopView } from './shop.js';
 
 /* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
 const VIEW_CLASSES = {
@@ -23,6 +24,7 @@ const VIEW_CLASSES = {
   stroke: StrokeView,
   mahjong: MahjongView,
   whack: WhackView,
+  shop: ShopView,
 };
 
 const $ = (s, r = document) => r.querySelector(s);
