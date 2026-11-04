@@ -247,30 +247,32 @@ export function createGolem({ rock, crystal, boss = false }) {
 }
 
 /* ===================== 寶箱 ===================== */
-export function createChest() {
+export function createChest({ beacon: withBeacon = true, light: withLight = true, mimic = false } = {}) {
   const root = new THREE.Group();
-  const wood = std(0x9a5f2c, { roughness: 0.8 });
+  const body = new THREE.Group();
+  root.add(body);
+  const wood = std(mimic ? 0x8a4f2a : 0x9a5f2c, { roughness: 0.8 });
   const goldMat = std(0xf5c842, { metalness: 0.7, roughness: 0.3, emissive: 0x3a2a00 });
 
   const base = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.36, 0.44), wood);
   base.position.y = 0.18;
-  root.add(base);
+  body.add(base);
   for (const s of [-1, 1]) {
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.38, 0.46), goldMat);
     b.position.set(0.2 * s, 0.18, 0);
-    root.add(b);
+    body.add(b);
   }
   const lock = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.05), goldMat);
   lock.position.set(0, 0.3, 0.235);
-  root.add(lock);
+  body.add(lock);
 
   const pivot = new THREE.Group();
   pivot.position.set(0, 0.36, -0.22);
-  root.add(pivot);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.62, 14, 1, false, 0, Math.PI), wood);
-  lid.rotation.z = Math.PI / 2;
-  lid.position.z = 0.22;
-  pivot.add(lid);
+  body.add(pivot);
+  const lidMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.62, 14, 1, false, 0, Math.PI), wood);
+  lidMesh.rotation.z = Math.PI / 2;
+  lidMesh.position.z = 0.22;
+  pivot.add(lidMesh);
   for (const s of [-1, 1]) {
     const b = new THREE.Mesh(new THREE.CylinderGeometry(0.232, 0.232, 0.065, 14, 1, false, 0, Math.PI), goldMat);
     b.rotation.z = Math.PI / 2;
@@ -278,30 +280,84 @@ export function createChest() {
     pivot.add(b);
   }
 
-  const inner = makeGlow(0xffd36b, 1.0, 0.0);
-  inner.position.set(0, 0.42, 0);
-  root.add(inner);
-  const beacon = makeGlow(0xffc24a, 2.4, 0.55);
-  beacon.position.set(0, 0.5, 0);
-  root.add(beacon);
-  const light = new THREE.PointLight(0xffc860, 5, 4.5, 2);
-  light.position.set(0, 1.0, 0.4);
-  root.add(light);
+  // 假寶箱：牙齒同紅眼，打開先見到
+  const mimicParts = [];
+  if (mimic) {
+    const tooth = std(0xfff6e0, { roughness: 0.4 });
+    for (let i = 0; i < 6; i++) {
+      const x = -0.24 + i * 0.096;
+      const lower = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 4), tooth);
+      lower.position.set(x, 0.4, 0.2);
+      body.add(lower);
+      const upper = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 4), tooth);
+      upper.rotation.x = Math.PI;
+      upper.position.set(x, -0.04, 0.44);
+      pivot.add(upper);
+    }
+    const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 6), std(0xd2405a, { roughness: 0.5 }));
+    tongue.scale.set(1.3, 0.3, 1);
+    tongue.position.set(0, 0.36, 0.02);
+    body.add(tongue);
+    for (const s of [-1, 1]) {
+      const eye = makeGlow(0xff2a2a, 0.34, 0);
+      eye.position.set(0.1 * s, 0.5, -0.05);
+      body.add(eye);
+      mimicParts.push(eye);
+    }
+  }
 
-  let openT = -1;
+  const inner = makeGlow(mimic ? 0xff4040 : 0xffd36b, 1.0, 0.0);
+  inner.position.set(0, 0.42, 0);
+  body.add(inner);
+  let beaconSprite = null;
+  if (withBeacon) {
+    beaconSprite = makeGlow(0xffc24a, 2.4, 0.55);
+    beaconSprite.position.set(0, 0.5, 0);
+    root.add(beaconSprite);
+  }
+  let pl = null;
+  if (withLight) {
+    pl = new THREE.PointLight(0xffc860, 5, 4.5, 2);
+    pl.position.set(0, 1.0, 0.4);
+    root.add(pl);
+  }
+
+  let target = 0;   // 蓋目標：0 合埋，1 打開
+  let lid = 0;
+  let burst = 0;
+  let biteT = -1;
+  let shake = 0;
   return {
     group: root,
-    open() { openT = 0; },
+    get isOpen() { return target > 0.5; },
+    open(withBurst = true) { target = 1; if (withBurst) burst = 1; },
+    close() { target = 0; },
+    bite() { biteT = 0; target = 1; shake = 0.5; },
+    setGlow(v) { if (beaconSprite) beaconSprite.visible = v; },
     update(dt, t) {
-      beacon.material.opacity = 0.42 + 0.18 * Math.sin(t * 3);
-      beacon.scale.setScalar(2.2 + 0.25 * Math.sin(t * 3));
-      if (openT >= 0) {
-        openT = Math.min(1.5, openT + dt);
-        const k = Math.min(1, openT / 0.45);
-        pivot.rotation.x = -1.9 * (1 - Math.pow(1 - k, 3));
-        inner.material.opacity = Math.min(1, openT * 2);
-        inner.scale.setScalar(1 + openT * 2.5);
-        light.intensity = 5 + Math.sin(Math.min(1, openT) * Math.PI) * 30;
+      if (beaconSprite) {
+        beaconSprite.material.opacity = 0.42 + 0.18 * Math.sin(t * 3);
+        beaconSprite.scale.setScalar(2.2 + 0.25 * Math.sin(t * 3));
+      }
+      if (biteT >= 0) {
+        // 咬三下：蓋快速開合 + 彈跳
+        biteT += dt;
+        target = Math.floor(biteT / 0.12) % 2 === 0 ? 1 : 0.15;
+        body.position.y = Math.abs(Math.sin(biteT * 16)) * 0.12;
+        if (biteT > 0.75) { biteT = -1; target = 0; body.position.y = 0; }
+      }
+      const speed = biteT >= 0 ? 30 : 9;
+      lid += (target - lid) * Math.min(1, dt * speed);
+      pivot.rotation.x = -1.9 * lid;
+      inner.material.opacity = Math.min(1, lid * 1.2) * (mimic ? 0.8 : 1);
+      inner.scale.setScalar(1 + lid * 1.2 + burst * 1.5);
+      mimicParts.forEach(e => { e.material.opacity = lid * (0.75 + 0.25 * Math.sin(t * 10)); });
+      if (pl) pl.intensity = 5 + burst * 30;
+      burst = Math.max(0, burst - dt * 1.6);
+      if (shake > 0) {
+        body.rotation.z = Math.sin(t * 60) * 0.08 * (shake / 0.5);
+        shake = Math.max(0, shake - dt);
+        if (shake === 0) body.rotation.z = 0;
       }
     },
   };

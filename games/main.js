@@ -1,12 +1,21 @@
-/* 腦力勇者 — 總控制：畫面、計時、結算、輸入 */
+/* 腦力勇者 — 總控制：畫面、計時、結算、輸入（所有遊戲共用） */
 import { Engine, webglAvailable, rectOf } from './engine.js';
 import {
-  save, persist, expToNext, titleFor, addExp, GAMES, keyOf, isUnlocked, sizeLabel, starsTotal, fmtTime, fmtTimeHtml,
+  save, persist, expToNext, titleFor, addExp, GAMES, CATEGORIES, gameIds, keyOf, isUnlocked, sizeLabel,
+  starsTotal, starsMax, isBetter, fmtTime, fmtTimeHtml, fmtBest,
 } from './store.js';
 import { Sound, buzz } from './sound.js';
 import { MenuView } from './menu.js';
 import { SchulteView } from './schulte.js';
 import { MazeView } from './maze.js';
+import { MemoryView } from './memory.js';
+
+/* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
+const VIEW_CLASSES = {
+  schulte: SchulteView,
+  maze: MazeView,
+  memory: MemoryView,
+};
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -40,29 +49,56 @@ async function start() {
 
   const canvas = $('#gl');
   const engine = new Engine(canvas);
+  const gameEl = $('#game');
 
   /* =========================================================
-     計時器（切走 App 自動暫停）
+     計時器：正數或倒數（切走 App 自動暫停）
      ========================================================= */
   const Timer = {
-    el: null, t0: 0, acc: 0, running: false, raf: 0, shown: '',
+    el: null, t0: 0, acc: 0, running: false, raf: 0, shown: '', limit: 0, onUp: null,
     reset(el) {
       cancelAnimationFrame(this.raf);
-      this.el = el; this.acc = 0; this.running = false; this.shown = '';
+      this.el = el; this.acc = 0; this.running = false; this.shown = ''; this.limit = 0; this.onUp = null;
+      $('.timer-pill').classList.remove('warn');
       this.render();
     },
-    start() { if (!this.el) return; this.t0 = performance.now(); this.running = true; this.loop(); },
+    preset(limit) { this.limit = limit; this.render(); },
+    start(limit = 0, onUp = null) {
+      if (!this.el) return;
+      this.limit = limit;
+      this.onUp = onUp;
+      this.t0 = performance.now();
+      this.running = true;
+      this.loop();
+    },
     elapsedMs() { return this.acc + (this.running ? performance.now() - this.t0 : 0); },
     loop() {
       cancelAnimationFrame(this.raf);
-      const tick = () => { if (!this.running) return; this.render(); this.raf = requestAnimationFrame(tick); };
+      const tick = () => {
+        if (!this.running) return;
+        if (this.limit && this.elapsedMs() >= this.limit * 1000) {
+          this.pause();
+          this.acc = this.limit * 1000;
+          this.render();
+          const f = this.onUp;
+          this.onUp = null;
+          if (f) f();
+          return;
+        }
+        this.render();
+        this.raf = requestAnimationFrame(tick);
+      };
       tick();
     },
     render() {
       if (!this.el) return;
-      const html = fmtTimeHtml(this.elapsedMs() / 1000);
+      const s = this.elapsedMs() / 1000;
+      const shownSec = this.limit ? Math.max(0, this.limit - s) : s;
+      const html = fmtTimeHtml(shownSec);
       if (html !== this.shown) { this.el.innerHTML = html; this.shown = html; }
+      $('.timer-pill').classList.toggle('warn', !!this.limit && shownSec <= 10 && shownSec > 0);
     },
+    penalty(sec) { this.acc += sec * 1000; this.render(); },
     pause() {
       if (!this.running) return;
       this.acc += performance.now() - this.t0;
@@ -74,11 +110,12 @@ async function start() {
   };
 
   /* =========================================================
-     UI 小工具
+     共用 UI
      ========================================================= */
-  const toastEls = { schulte: $('#toastS'), maze: $('#toastM') };
+  const activeMode = () => $(`#game .mode[data-mode="${gameEl.dataset.mode}"]`);
   function toast(text) {
-    const el = toastEls[current];
+    const mode = activeMode();
+    const el = mode && mode.querySelector('.toast');
     if (!el) return;
     el.textContent = text ? `▶ ${text}` : '';
     if (text) restartAnim(el, 'flash');
@@ -92,90 +129,91 @@ async function start() {
     $('#popups').appendChild(el);
     setTimeout(() => el.remove(), 950);
   }
-  const counter = $('#counter');
-  function setCounter(html) { counter.innerHTML = html; restartAnim(counter, 'pop'); }
+  const counterEl = $('#counter');
+  function setCounter(html) { counterEl.innerHTML = html; restartAnim(counterEl, 'pop'); }
+
+  function renderTools(tools) {
+    $$('#game .tool-row').forEach(row => { row.innerHTML = ''; row.hidden = true; });
+    const row = activeMode() && activeMode().querySelector('.tool-row');
+    if (!row || !tools.length) return;
+    row.innerHTML = tools.map(t => `<button class="tool-btn" data-tool="${t.id}">${t.label}</button>`).join('');
+    row.hidden = false;
+  }
+
+  // 超級機械人大戰式「必殺技」插畫橫幅
+  let cutinTimer = 0;
+  function cutin(name, attack) {
+    const el = $('#cutin');
+    $('#cutinName').textContent = name;
+    $('#cutinAttack').textContent = attack;
+    el.hidden = false;
+    restartAnim(el, 'show');
+    clearTimeout(cutinTimer);
+    cutinTimer = setTimeout(() => { el.hidden = true; }, 1600);
+  }
 
   /* =========================================================
-     3D 畫面
+     遊戲畫面（按需要先建立，慳記憶體）
      ========================================================= */
-  let lastTime = 0;
   let session = null;
+  let live = false;          // 呢局仲未結算
   let current = 'menu';
 
-  const schulte = new SchulteView({
-    onProgress(next, total) {
-      const nn = $('#nextNum');
-      nn.textContent = next > total ? '✓' : String(next);
-      restartAnim(nn, 'pop');
-      const ratio = Math.max(0, (total - next + 1) / total);
-      const hp = $('#hpFill');
-      hp.style.width = `${ratio * 100}%`;
-      hp.classList.toggle('mid', ratio <= 0.5 && ratio > 0.2);
-      hp.classList.toggle('low', ratio <= 0.2);
+  const hooks = {
+    toast,
+    popup,
+    counter: setCounter,
+    cutin,
+    clockStart(limit = 0) {
+      Timer.start(limit, () => { const v = views[current]; if (v && v.timeUp) v.timeUp(); });
     },
-    onMiss(m) { setCounter(`失誤 <b>${m}</b>`); },
-    onMessage: toast,
-    onCombo(c) {
-      const r = rectOf($('#enemyStage'));
-      popup(`${c} 連擊！`, r.cx + r.width * 0.28, r.top + r.height * 0.25, 'combo');
+    clockPause() { Timer.pause(); },
+    clockResume() { Timer.resume(); },
+    penalty(sec) { Timer.penalty(sec); },
+    complete() { return Timer.stop(); },
+    elapsed() { return Timer.elapsedMs() / 1000; },
+    finish(result) {
+      if (!live || !session) return;
+      live = false;
+      showResult({ game: session.game, level: session.level, ...result });
     },
-    onDamage(dmg, crit, x, y) {
-      // 少少隨機位移，連續攻擊時數字唔會疊埋一齊
-      popup(`-${dmg}`, x + (Math.random() - 0.5) * 110, y + (Math.random() - 0.5) * 36, crit ? 'crit' : '');
+    setTool(id, label, disabled = false) {
+      const b = $(`#game [data-tool="${id}"]`);
+      if (!b) return;
+      if (label != null) b.innerHTML = label;
+      b.disabled = disabled;
     },
-    onComplete() { lastTime = Timer.stop(); },
-    onFinish(stats) {
-      const lv = session.level;
-      const stars = lastTime <= lv.stars[0] ? 3 : lastTime <= lv.stars[1] ? 2 : 1;
-      showResult({
-        game: 'schulte', level: lv, time: lastTime, stars,
-        lines: [['失誤', stats.misses === 0 ? '0 ✨' : stats.misses], ['最高連擊', stats.maxCombo], ['會心一擊', stats.crits]],
-        bonus: stats.misses === 0 ? 10 : 0,
-        kicker: 'VICTORY',
-        title: stars === 3 ? '完美勝利！' : stars === 2 ? '漂亮的勝利！' : '戰鬥勝利！',
-      });
+    rect(name) {
+      const el = activeMode() && activeMode().querySelector(`[data-region="${name}"]`);
+      return el ? rectOf(el) : null;
     },
-  });
-
-  const maze = new MazeView({
-    onGem(c, total) {
-      setCounter(`💎 <b>${c}/${total}</b>`);
-      toast(c === total ? '寶石全部到手！向寶箱進發！' : `得到了寶石！（${c}/${total}）`);
-    },
-    onMessage: toast,
-    onComplete() { lastTime = Timer.stop(); },
-    onFinish(stats) {
-      const lv = session.level;
-      const fogMul = lv.fog ? 1.35 : 1;
-      const par3 = (stats.shortest * 0.6 + 5) * fogMul;
-      const par2 = (stats.shortest * 1.25 + 12) * fogMul;
-      const stars = lastTime <= par3 ? 3 : lastTime <= par2 ? 2 : 1;
-      showResult({
-        game: 'maze', level: lv, time: lastTime, stars,
-        lines: [['步數', stats.steps], ['最短路線', stats.shortest], ['寶石', `${stats.collected}/${stats.gemTotal}`]],
-        bonus: stats.collected * 5 + (stats.collected === stats.gemTotal && stats.gemTotal ? 10 : 0),
-        kicker: 'DUNGEON CLEAR',
-        title: stars === 3 ? '完美攻略！' : stars === 2 ? '迷宮攻略成功！' : '成功脫出迷宮！',
-      });
-    },
-  });
+    panel() { return $('#panelBody'); },
+  };
 
   const menuView = new MenuView();
-  const views = { menu: menuView, schulte, maze };
+  const views = { menu: menuView };
+  function getView(id) {
+    if (!views[id]) views[id] = new VIEW_CLASSES[id](hooks);
+    return views[id];
+  }
 
   function measure() {
-    if (current === 'menu') menuView.setRect(rectOf($('#menuStage')));
-    else if (current === 'schulte') schulte.setRects(rectOf($('#schultePlay')), rectOf($('#enemyStage')));
-    else maze.setRect(rectOf($('#mazePlay')));
+    if (current === 'menu') {
+      menuView.setRects({ stage: rectOf($('#menuStage')) });
+      return;
+    }
+    const mode = activeMode();
+    if (!mode) return;
+    const regions = {};
+    $$('[data-region]', mode).forEach(el => { regions[el.dataset.region] = rectOf(el); });
+    views[current].setRects(regions);
   }
 
   function showScreen(name) {
     current = name;
     $('#menu').classList.toggle('active', name === 'menu');
-    const game = $('#game');
-    game.classList.toggle('active', name !== 'menu');
-    game.classList.toggle('schulte', name === 'schulte');
-    game.classList.toggle('maze', name === 'maze');
+    gameEl.classList.toggle('active', name !== 'menu');
+    gameEl.dataset.game = name;
     engine.setView(views[name]);
     measure();
     if (name === 'menu') renderMenu();
@@ -243,14 +281,20 @@ async function start() {
     };
   })();
 
+  function setPaused(p) {
+    const v = views[current];
+    if (v && current !== 'menu') v.paused = p;
+  }
+
   function abortGame() {
     Countdown.cancel();
-    schulte.abort();
-    maze.abort();
+    Object.values(views).forEach(v => { if (v.abort) v.abort(); v.paused = false; });
     stopRepeat();
     Timer.reset(null);
+    live = false;
     autoPaused = false;
     retreatPaused = false;
+    $('#cutin').hidden = true;
   }
 
   function goMenu() {
@@ -276,49 +320,42 @@ async function start() {
     if (!inGameHistory) {
       try { history.pushState({ brainHero: 'game' }, ''); inGameHistory = true; } catch (_) { /* file:// */ }
     }
-    if (game === 'schulte') await fontsReady;
+    await fontsReady;
+    const view = getView(game);
+    view.setup(level);
+    const hud = view.hud(level);
+    session.hud = hud;
+    gameEl.dataset.mode = hud.mode;
     showScreen(game);
-    $$('.toast').forEach(t => { t.textContent = ''; });
+    renderTools(hud.tools || []);
+    $$('#game .toast').forEach(t => { t.textContent = ''; });
+    counterEl.innerHTML = hud.counter || '';
+    counterEl.hidden = !hud.counter;
     Timer.reset($('#timer'));
-
-    if (game === 'schulte') {
-      $('#enemyName').textContent = level.enemyName;
-      $('#nextNum').textContent = '1';
-      const hp = $('#hpFill');
-      hp.style.width = '100%';
-      hp.className = '';
-      counter.innerHTML = '失誤 <b>0</b>';
-      schulte.setup(level);
-      measure();
-      Countdown.run(`${level.enemyName}出現了！`, () => {
-        schulte.begin();
-        Timer.start();
-        toast('由「1」開始，順序點擊石磚！');
-      });
-    } else {
-      maze.setup(level);
-      measure();
-      counter.innerHTML = `💎 <b>0/${maze.gemTotal}</b>`;
-      toast(level.fog ? '四周一片黑暗……寶箱在遠處發光！' : '找出通往寶箱的路！');
-      Countdown.run(level.fog ? '🔥 點起火把，進入黑暗迷宮！' : '🏰 進入地下迷宮！', () => {
-        maze.begin();
-        Timer.start();
-        toast('用方向掣、滑動或點擊地面前進');
-      });
-    }
+    if (hud.timeLimit) Timer.preset(hud.timeLimit);
+    live = true;
+    measure();
+    if (hud.prep) toast(hud.prep);
+    Countdown.run(hud.intro, () => {
+      view.begin();
+      if (!hud.manualClock) hooks.clockStart(hud.timeLimit || 0);
+      if (hud.startMsg) toast(hud.startMsg);
+    });
   }
 
   /* =========================================================
      戰果結算
      ========================================================= */
-  function showResult({ game, level, time, stars, lines, bonus, kicker, title }) {
+  function showResult({ game, level, time = 0, score = 0, stars, lines, bonus = 0, kicker, title }) {
+    const g = GAMES[game];
+    const isScore = g.metric === 'score';
     const key = keyOf(game, level);
     const prevBest = save.best[key];
     const firstClear = prevBest == null;
-    const t1 = Math.round(time * 10) / 10;
-    const isRecord = firstClear || t1 < prevBest;
-    const unlocksBoss = firstClear && level.id === 'hard';
-    if (isRecord) save.best[key] = t1;
+    const value = isScore ? score : Math.round(time * 10) / 10;
+    const isRecord = isBetter(game, value, prevBest);
+    const unlocksBoss = firstClear && g.levels.some(l => l.unlock === level.id);
+    if (isRecord) save.best[key] = value;
     save.stars[key] = Math.max(save.stars[key] || 0, stars);
     save.plays += 1;
     // 過關基本分 + 每粒星 10 + 額外獎勵
@@ -331,16 +368,21 @@ async function start() {
     $('#resTitle').textContent = title;
     $('#resStars').innerHTML = [0, 1, 2].map(i => `<span class="star${i < stars ? ' on' : ''}">★</span>`).join('');
     $('#resStars').setAttribute('aria-label', `評價 ${stars} 星（滿分 3 星）`);
-    $('#resTime').innerHTML = fmtTimeHtml(time);
+    $('#resLabel').textContent = isScore ? g.scoreLabel : '用時';
+    $('#resTime').innerHTML = isScore ? `${score}<small>${g.unit}</small>` : fmtTimeHtml(time);
 
     const badge = $('#resBadge');
     badge.hidden = !isRecord;
-    badge.textContent = firstClear ? '🎖 首次攻略！' : '🏆 新紀錄！';
+    badge.textContent = firstClear ? (isScore ? '🎖 首次挑戰！' : '🎖 首次攻略！') : '🏆 新紀錄！';
     const compare = $('#resCompare');
     compare.hidden = firstClear;
-    compare.textContent = firstClear ? '' : isRecord
-      ? `比之前最佳快 ${(prevBest - t1).toFixed(1)} 秒`
-      : `最佳紀錄 ${fmtTime(prevBest)}`;
+    if (!firstClear) {
+      if (isScore) {
+        compare.textContent = isRecord ? `比之前最佳多 ${value - prevBest} ${g.unit}` : `最佳紀錄 ${fmtBest(game, prevBest)}`;
+      } else {
+        compare.textContent = isRecord ? `比之前最佳快 ${(prevBest - value).toFixed(1)} 秒` : `最佳紀錄 ${fmtTime(prevBest)}`;
+      }
+    }
 
     $('#resStats').innerHTML = lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('');
     $('#resExp').innerHTML = `獲得經驗值 <b>+${expTotal} EXP</b>`;
@@ -373,9 +415,9 @@ async function start() {
       const unlocked = isUnlocked(game, l);
       const key = keyOf(game, l);
       const best = save.best[key];
-      const desc = !unlocked ? '🔒 攻略高級後解鎖' : game === 'schulte' ? l.enemyName : l.desc;
+      const desc = !unlocked ? '🔒 攻略高級後解鎖' : l.desc;
       const bestHtml = best != null
-        ? `<span>${fmtTime(best)}</span><span class="stars">${starText(save.stars[key] || 0)}</span>`
+        ? `<span>${fmtBest(game, best)}</span><span class="stars">${starText(save.stars[key] || 0)}</span>`
         : `<span class="none">${unlocked ? '未挑戰' : ''}</span>`;
       return `<button class="level-card" data-level="${l.id}" data-tier="${l.id}" ${unlocked ? '' : 'disabled'}>
           <span class="lc-head"><span class="lc-name">${l.name}</span><span class="lc-size">${sizeLabel(l)}</span></span>
@@ -395,6 +437,8 @@ async function start() {
     startGame(diffGame, GAMES[diffGame].levels.find(l => l.id === btn.dataset.level));
   });
 
+  const availableGames = () => gameIds().filter(id => VIEW_CLASSES[id]);
+
   function openRecords() {
     const need = expToNext(save.level);
     $('#rLv').textContent = save.level;
@@ -402,13 +446,14 @@ async function start() {
     $('#rExp').style.width = `${Math.min(100, (save.exp / need) * 100)}%`;
     $('#rExpText').textContent = `經驗值 ${save.exp} / ${need}．出戰 ${save.plays} 次`;
     const rows = [];
-    for (const [game, g] of Object.entries(GAMES)) {
+    for (const game of availableGames()) {
+      const g = GAMES[game];
       rows.push(`<div class="rec-group">${g.icon} ${g.title}</div>`);
       for (const l of g.levels) {
         const key = keyOf(game, l);
         const best = save.best[key];
         const val = best != null
-          ? `${fmtTime(best)}<span class="stars">${starText(save.stars[key] || 0)}</span>`
+          ? `${fmtBest(game, best)}<span class="stars">${starText(save.stars[key] || 0)}</span>`
           : `<span class="none">${isUnlocked(game, l) ? '未挑戰' : '🔒 未解鎖'}</span>`;
         rows.push(`<div class="rec-row"><span>${l.name}　${sizeLabel(l)}</span><span>${val}</span></div>`);
       }
@@ -422,15 +467,17 @@ async function start() {
      ========================================================= */
   function requestRetreat() {
     if (!countdownEl.hidden) { goMenu(); return; }
-    const playing = (current === 'schulte' && schulte.active) || (current === 'maze' && maze.active);
-    if (!playing) { goMenu(); return; }
+    const v = views[current];
+    if (!v || !v.active) { goMenu(); return; }
     retreatPaused = Timer.running;
     Timer.pause();
+    setPaused(true);
     stopRepeat();
     openOverlay(overlays.retreat);
   }
   function resumeFromRetreat() {
     closeOverlay(overlays.retreat);
+    setPaused(false);
     if (retreatPaused) Timer.resume();
     retreatPaused = false;
   }
@@ -446,22 +493,25 @@ async function start() {
   });
 
   /* =========================================================
-     輸入：畫布觸控
+     輸入：畫布觸控（交俾當前遊戲處理）
      ========================================================= */
+  const playView = () => (current !== 'menu' ? views[current] : null);
   canvas.addEventListener('pointerdown', e => {
-    if (overlayOpen() || e.button > 0) return;
-    if (current === 'schulte') {
-      e.preventDefault();
-      schulte.pointerDown(e.clientX, e.clientY);
-    } else if (current === 'maze') {
-      e.preventDefault();
-      try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* 舊瀏覽器 */ }
-      maze.pointerDown(e.clientX, e.clientY, e.pointerId);
-    }
+    const v = playView();
+    if (!v || !v.pointerDown || overlayOpen() || e.button > 0) return;
+    e.preventDefault();
+    if (v.pointerMove) { try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* 舊瀏覽器 */ } }
+    v.pointerDown(e.clientX, e.clientY, e.pointerId);
   });
-  canvas.addEventListener('pointermove', e => { if (current === 'maze') maze.pointerMove(e.clientX, e.clientY, e.pointerId); });
-  canvas.addEventListener('pointerup', e => { if (current === 'maze') maze.pointerUp(e.clientX, e.clientY, e.pointerId, false); });
-  canvas.addEventListener('pointercancel', e => { if (current === 'maze') maze.pointerUp(e.clientX, e.clientY, e.pointerId, true); });
+  canvas.addEventListener('pointermove', e => { const v = playView(); if (v && v.pointerMove) v.pointerMove(e.clientX, e.clientY, e.pointerId); });
+  canvas.addEventListener('pointerup', e => { const v = playView(); if (v && v.pointerUp) v.pointerUp(e.clientX, e.clientY, e.pointerId, false); });
+  canvas.addEventListener('pointercancel', e => { const v = playView(); if (v && v.pointerUp) v.pointerUp(e.clientX, e.clientY, e.pointerId, true); });
+
+  // 面板模式（道具店、成語石碑）嘅 HTML 按鈕
+  $('#panelBody').addEventListener('click', e => {
+    const v = playView();
+    if (v && v.panelClick && !overlayOpen()) v.panelClick(e);
+  });
 
   /* 方向掣：長按連續行 */
   let repeatTimer = 0;
@@ -472,6 +522,7 @@ async function start() {
     if (repeatBtn) repeatBtn.classList.remove('pressed');
     repeatBtn = null;
   }
+  const moveCurrent = dir => { const v = playView(); return !!(v && v.move && !overlayOpen() && v.move(dir)); };
   $$('.dpad-btn').forEach(btn => {
     btn.addEventListener('pointerdown', e => {
       e.preventDefault();
@@ -480,13 +531,13 @@ async function start() {
       btn.classList.add('pressed');
       try { btn.setPointerCapture(e.pointerId); } catch (_) { /* 舊瀏覽器 */ }
       const dir = btn.dataset.dir;
-      maze.move(dir);
+      moveCurrent(dir);
       repeatTimer = setTimeout(() => {
-        repeatTimer = setInterval(() => { if (!maze.move(dir)) stopRepeat(); }, 165);
+        repeatTimer = setInterval(() => { if (!moveCurrent(dir)) stopRepeat(); }, 165);
       }, 300);
     });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, stopRepeat));
-    btn.addEventListener('click', e => { if (e.detail === 0) maze.move(btn.dataset.dir); });
+    btn.addEventListener('click', e => { if (e.detail === 0) moveCurrent(btn.dataset.dir); });
     btn.addEventListener('contextmenu', e => e.preventDefault());
   });
 
@@ -500,14 +551,15 @@ async function start() {
       if (!overlays.records.hidden) { closeOverlay(overlays.records); return; }
       if (current !== 'menu' && !overlayOpen()) { requestRetreat(); return; }
     }
-    if (current !== 'maze' || overlayOpen()) return;
+    const v = playView();
+    if (!v || !v.move || overlayOpen()) return;
     const dir = KEY_DIRS[e.key];
     if (!dir) return;
     e.preventDefault();
     const now = performance.now();
     if (now - lastKey < 90) return;
     lastKey = now;
-    maze.move(dir);
+    v.move(dir);
   });
 
   // iOS 要喺手勢入面先可以發聲
@@ -527,8 +579,21 @@ async function start() {
   }
   function renderMenu() {
     updateStatus();
-    $('#qsSchulte').textContent = `★ ${starsTotal('schulte')}/12`;
-    $('#qsMaze').textContent = `★ ${starsTotal('maze')}/12`;
+    const ids = availableGames();
+    $('#gameGrid').innerHTML = CATEGORIES.map(c => {
+      const games = ids.filter(id => GAMES[id].category === c.id);
+      if (!games.length) return '';
+      const cards = games.map(id => {
+        const g = GAMES[id];
+        return `<button class="game-card cat-${g.category}" data-quest="${id}">
+            <span class="gc-ico" aria-hidden="true">${g.icon}</span>
+            <span class="gc-name">${g.title}</span>
+            <span class="gc-tag">${g.tagline}</span>
+            <span class="gc-stars">★ ${starsTotal(id)}/${starsMax(id)}</span>
+          </button>`;
+      }).join('');
+      return `<section class="cat"><h2 class="cat-head"><span aria-hidden="true">${c.icon}</span>${c.name}</h2><div class="cards">${cards}</div></section>`;
+    }).join('');
   }
   function renderMute() {
     $$('.mute-toggle').forEach(b => {
@@ -546,6 +611,12 @@ async function start() {
       Sound.setMuted(save.muted);
       persist();
       renderMute();
+      return;
+    }
+    const tool = e.target.closest('[data-tool]');
+    if (tool) {
+      const v = playView();
+      if (v && v.tool && !overlayOpen() && !tool.disabled) v.tool(tool.dataset.tool);
       return;
     }
     const a = e.target.closest('[data-action]');
@@ -567,7 +638,7 @@ async function start() {
   overlays.records.addEventListener('click', e => { if (e.target === overlays.records) closeOverlay(overlays.records); });
 
   // 自動測試用（網址加 ?debug 先會開）
-  if (new URLSearchParams(location.search).has('debug')) window.__bh = { schulte, maze, engine };
+  if (new URLSearchParams(location.search).has('debug')) window.__bh = { views, getView, engine, Timer };
 
   /* ---------- 啟動 ---------- */
   renderMute();

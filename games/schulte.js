@@ -1,5 +1,6 @@
 /* 數觸之戰：3D 符文石磚 + 魔像 Boss */
-import { THREE, easeOutBack, clamp } from './engine.js';
+import { THREE, easeOutBack, clamp, Scheduler } from './engine.js';
+import { numberTexture } from './textures.js';
 import { gradientTexture, makeGlow, Sparks, starField, Embers } from './fx.js';
 import { createGolem, createTorch } from './models.js';
 import { Sound, buzz } from './sound.js';
@@ -29,32 +30,10 @@ function roundedRect(w, h, r) {
   return s;
 }
 
-const numberTextures = new Map();
-function numberTexture(n) {
-  if (numberTextures.has(n)) return numberTextures.get(n);
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const g = c.getContext('2d');
-  const fs = n >= 10 ? 140 : 170;
-  g.font = `900 ${fs}px Montserrat, "Noto Sans TC", "PingFang HK", system-ui, sans-serif`;
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.lineJoin = 'round';
-  g.lineWidth = 20;
-  g.strokeStyle = 'rgba(5, 12, 30, .92)';
-  g.strokeText(String(n), 128, 138);
-  g.fillStyle = '#ffffff';
-  g.fillText(String(n), 128, 138);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  numberTextures.set(n, tex);
-  return tex;
-}
-
 export class SchulteView {
   constructor(hooks) {
     this.hooks = hooks;
+    this.sched = new Scheduler();
     this.scene = new THREE.Scene();
     this.scene.background = gradientTexture(['#241650', '#120d33', '#070816', '#04050c']);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 300);
@@ -116,8 +95,31 @@ export class SchulteView {
   }
 
   /* ---------- 建立一局 ---------- */
+  hud(level) {
+    return {
+      mode: 'schulte',
+      counter: '失誤 <b>0</b>',
+      intro: `${level.enemyName}出現了！`,
+      startMsg: '由「1」開始，順序點擊石磚！',
+    };
+  }
+
+  /* 魔像名牌、HP 條、「下一個」 */
+  renderProgress() {
+    const nn = document.getElementById('nextNum');
+    nn.textContent = this.next > this.total ? '✓' : String(this.next);
+    nn.classList.remove('pop'); void nn.offsetWidth; nn.classList.add('pop');
+    const ratio = Math.max(0, (this.total - this.next + 1) / this.total);
+    const hp = document.getElementById('hpFill');
+    hp.style.width = `${ratio * 100}%`;
+    hp.classList.toggle('mid', ratio <= 0.5 && ratio > 0.2);
+    hp.classList.toggle('low', ratio <= 0.2);
+  }
+
   setup(level) {
+    this.sched.clear();
     this.level = level;
+    document.getElementById('enemyName').textContent = level.enemyName;
     this.n = level.size;
     this.total = this.n * this.n;
     this.next = 1;
@@ -166,6 +168,7 @@ export class SchulteView {
     this.ringMat.color.set(level.crystal);
     this.riseT = 0;
     this.age = 0;
+    this.renderProgress();
     this.layout();
     Sound.rumble();
   }
@@ -177,6 +180,7 @@ export class SchulteView {
 
   abort() {
     this.active = false;
+    this.sched.clear();
   }
 
   /* ---------- 版面：按 HTML 區域擺放 3D 物件 ---------- */
@@ -188,7 +192,7 @@ export class SchulteView {
     this.layout();
   }
 
-  setRects(play, enemy) {
+  setRects({ play, enemy }) {
     this.playRect = play;
     this.enemyRect = enemy;
     this.layout();
@@ -255,15 +259,18 @@ export class SchulteView {
     const dmg = crit ? rand(22, 32) : rand(8, 15);
     this.orbs.push({ sprite: orb, from: this.v1.clone(), t: 0, crit, dmg });
 
-    this.hooks.onMessage(crit ? `會心一擊！造成 ${dmg} 點傷害` : `命中！造成 ${dmg} 點傷害`);
-    if (this.combo >= 5 && this.combo % 5 === 0) this.hooks.onCombo(this.combo);
+    this.hooks.toast(crit ? `會心一擊！造成 ${dmg} 點傷害` : `命中！造成 ${dmg} 點傷害`);
+    if (this.combo >= 5 && this.combo % 5 === 0) {
+      const r = this.enemyRect;
+      this.hooks.popup(`${this.combo} 連擊！`, r.cx + r.width * 0.28, r.top + r.height * 0.25, 'combo');
+    }
 
     this.next += 1;
-    this.hooks.onProgress(this.next, this.total);
+    this.renderProgress();
     if (this.next > this.total) {
       this.active = false;
       this.finished = true;
-      this.hooks.onComplete();
+      this.time = this.hooks.complete();
     }
   }
 
@@ -273,8 +280,8 @@ export class SchulteView {
     tile.wrong = 0.45;
     Sound.miss();
     buzz([25, 40, 25]);
-    this.hooks.onMiss(this.misses);
-    this.hooks.onMessage(`這是「${tile.v}」，請找「${this.next}」`);
+    this.hooks.counter(`失誤 <b>${this.misses}</b>`);
+    this.hooks.toast(`這是「${tile.v}」，請找「${this.next}」`);
   }
 
   orbArrive(orb) {
@@ -285,7 +292,9 @@ export class SchulteView {
     this.golem.headPos(this.v1);
     this.v1.y += 0.9 * this.arena.scale.x;
     this.v1.project(this.camera);
-    this.hooks.onDamage(orb.dmg, orb.crit, (this.v1.x + 1) / 2 * this.W, (1 - this.v1.y) / 2 * this.H);
+    // 少少隨機位移，連續攻擊時數字唔會疊埋一齊
+    this.hooks.popup(`-${orb.dmg}`, (this.v1.x + 1) / 2 * this.W + (Math.random() - 0.5) * 110,
+      (1 - this.v1.y) / 2 * this.H + (Math.random() - 0.5) * 36, orb.crit ? 'crit' : '');
     if (this.finished && this.orbs.length === 0 && !this.defeated) this.defeat();
   }
 
@@ -297,14 +306,23 @@ export class SchulteView {
     buzz([40, 60, 80]);
     this.sparks.spawn(this.v2, { count: 140, color: this.level.crystal, speed: 9, life: 1.1, gravity: 3, up: 2 });
     this.sparks.spawn(this.v2, { count: 60, color: 0xffffff, speed: 6, life: 0.8, gravity: 2 });
-    this.hooks.onMessage(`${this.level.enemyName}被打倒了！`);
-    setTimeout(() => this.hooks.onFinish({
-      misses: this.misses, maxCombo: this.maxCombo, crits: this.crits,
-    }), 1500);
+    this.hooks.toast(`${this.level.enemyName}被打倒了！`);
+    const lv = this.level;
+    const time = this.time;
+    const stars = time <= lv.stars[0] ? 3 : time <= lv.stars[1] ? 2 : 1;
+    const { misses, maxCombo, crits } = this;
+    this.sched.after(1.5, () => this.hooks.finish({
+      time, stars,
+      lines: [['失誤', misses === 0 ? '0 ✨' : misses], ['最高連擊', maxCombo], ['會心一擊', crits]],
+      bonus: misses === 0 ? 10 : 0,
+      kicker: 'VICTORY',
+      title: stars === 3 ? '完美勝利！' : stars === 2 ? '漂亮的勝利！' : '戰鬥勝利！',
+    }));
   }
 
   /* ---------- 每格更新 ---------- */
   update(dt, t) {
+    this.sched.update(dt);
     this.age += dt;
     this.embers.update(dt, t);
     this.sparks.update(dt);
@@ -351,7 +369,7 @@ export class SchulteView {
         const target = this.tiles.find(tt => tt.v === this.next);
         if (target && !target.hint) {
           target.hint = true;
-          this.hooks.onMessage('勇者的直覺：留意發光的石磚！');
+          this.hooks.toast('勇者的直覺：留意發光的石磚！');
         }
       }
     }

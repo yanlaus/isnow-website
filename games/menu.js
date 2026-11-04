@@ -84,8 +84,8 @@ export class MenuView {
     this.layout();
   }
 
-  setRect(r) {
-    this.rect = r;
+  setRects({ stage }) {
+    this.rect = stage;
     this.layout();
   }
 

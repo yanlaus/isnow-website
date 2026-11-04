@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="腦力勇者" />
   <meta name="theme-color" content="#0a1638" />
   <meta name="format-detection" content="telephone=no" />
-  <title>腦力勇者 — 數觸之戰．地下迷宮</title>
+  <title>腦力勇者 — 長者動腦冒險遊戲</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="games.css" />
   <link rel="modulepreload" href="vendor/three/three.module.min.js" />
 </head>
@@ -37,24 +37,17 @@
     </header>
 
     <div class="menu-body">
-      <div class="logo">
-        <p class="logo-kicker">BRAIN QUEST</p>
-        <h1 class="logo-title">腦力勇者</h1>
-        <p class="logo-sub">每日一戰，鍛鍊專注力與記憶力</p>
+      <div class="menu-hero">
+        <div class="logo">
+          <p class="logo-kicker">BRAIN QUEST</p>
+          <h1 class="logo-title">腦力勇者</h1>
+          <p class="logo-sub">每日一戰，鍛鍊專注力與記憶力</p>
+        </div>
+        <div class="menu-stage" id="menuStage" aria-hidden="true"></div>
       </div>
-      <div class="menu-stage" id="menuStage" aria-hidden="true"></div>
-      <div class="menu-actions">
-        <button class="quest gold" data-quest="schulte">
-          <span class="quest-ico" aria-hidden="true">⚔️</span>
-          <span class="quest-txt"><b>數觸之戰</b><small>順序點數字，擊倒魔像</small></span>
-          <span class="quest-meta" id="qsSchulte">★ 0</span>
-        </button>
-        <button class="quest teal" data-quest="maze">
-          <span class="quest-ico" aria-hidden="true">🏰</span>
-          <span class="quest-txt"><b>地下迷宮</b><small>穿越迷宮，打開寶箱</small></span>
-          <span class="quest-meta" id="qsMaze">★ 0</span>
-        </button>
-        <button class="ghost-btn" data-action="records">📜 冒險紀錄</button>
+      <div class="menu-list" id="menuList">
+        <div id="gameGrid"></div>
+        <button class="ghost-btn records-btn" data-action="records">📜 冒險紀錄</button>
       </div>
     </div>
   </section>
@@ -70,25 +63,25 @@
       </div>
     </header>
 
-    <!-- 數觸之戰 -->
-    <div class="mode schulte-mode" id="schulteMode">
+    <!-- 數觸之戰：魔像區 + 石磚區 -->
+    <div class="mode schulte-mode" data-mode="schulte">
       <div class="enemy-panel">
         <div class="enemy-plate">
           <span class="enemy-name" id="enemyName">魔像</span>
           <div class="hp-bar" aria-hidden="true"><i id="hpFill"></i></div>
         </div>
-        <div class="enemy-stage" id="enemyStage"></div>
-        <p class="toast" id="toastS" aria-live="polite"></p>
+        <div class="enemy-stage" data-region="enemy"></div>
+        <p class="toast" aria-live="polite"></p>
         <div class="next-chip" aria-live="polite"><small>下一個</small><b id="nextNum">1</b></div>
       </div>
-      <div class="play" id="schultePlay"></div>
+      <div class="play" data-region="play"></div>
     </div>
 
-    <!-- 地下迷宮 -->
-    <div class="mode maze-mode" id="mazeMode">
-      <div class="play" id="mazePlay"></div>
+    <!-- 格仔世界：迷宮、一筆畫（方向掣） -->
+    <div class="mode grid-mode" data-mode="grid">
+      <div class="play" data-region="play"></div>
       <div class="controls">
-        <p class="toast" id="toastM" aria-live="polite"></p>
+        <p class="toast" aria-live="polite"></p>
         <div class="dpad" role="group" aria-label="方向掣">
           <button class="dpad-btn up" data-dir="up" aria-label="向上">▲</button>
           <button class="dpad-btn left" data-dir="left" aria-label="向左">◀</button>
@@ -96,11 +89,36 @@
           <button class="dpad-btn right" data-dir="right" aria-label="向右">▶</button>
           <button class="dpad-btn down" data-dir="down" aria-label="向下">▼</button>
         </div>
+        <div class="tool-row" hidden></div>
       </div>
+    </div>
+
+    <!-- 單一遊戲區：寶箱記憶、咒文連鎖、麻雀、打怪 -->
+    <div class="mode board-mode" data-mode="board">
+      <p class="toast" aria-live="polite"></p>
+      <div class="play" data-region="play"></div>
+      <div class="tool-row" hidden></div>
+    </div>
+
+    <!-- 場景 + 操作面板：道具店、成語石碑 -->
+    <div class="mode panel-mode" data-mode="panel">
+      <div class="panel-stage">
+        <div class="stage-box" data-region="stage"></div>
+        <p class="toast" aria-live="polite"></p>
+      </div>
+      <div class="panel-body" id="panelBody"></div>
     </div>
 
     <div class="popups" id="popups" aria-hidden="true"></div>
   </section>
+
+  <!-- 必殺技插畫橫幅 -->
+  <div class="cutin" id="cutin" aria-live="assertive" hidden>
+    <div class="cutin-band">
+      <span class="cutin-name" id="cutinName">勇者</span>
+      <span class="cutin-attack" id="cutinAttack">必殺・流星斬！</span>
+    </div>
+  </div>
 
   <!-- ================= 難度選擇 ================= -->
   <div class="overlay" id="diffOverlay" role="dialog" aria-modal="true" aria-labelledby="diffTitle" hidden>
@@ -142,7 +160,7 @@
         <p class="res-kicker" id="resKicker">VICTORY</p>
         <h2 class="res-title" id="resTitle">勝利！</h2>
         <div class="res-stars" id="resStars"></div>
-        <div class="res-time"><span>用時</span><b id="resTime">0.0</b></div>
+        <div class="res-time"><span id="resLabel">用時</span><b id="resTime">0.0</b></div>
         <p class="res-note">
           <span class="res-badge" id="resBadge" hidden></span>
           <span class="res-compare" id="resCompare" hidden></span>
