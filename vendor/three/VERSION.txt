@@ -1,0 +1,2 @@
+three.js r186 (0.186.1), bundled from build/three.module.js + three.core.js with:
+  esbuild three.module.js --bundle --format=esm --minify --legal-comments=inline
