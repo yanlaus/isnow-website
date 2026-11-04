@@ -11,6 +11,7 @@ import { MazeView } from './maze.js';
 import { MemoryView } from './memory.js';
 import { SimonView } from './simon.js';
 import { StrokeView } from './stroke.js';
+import { MahjongView } from './mahjong.js';
 
 /* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
 const VIEW_CLASSES = {
@@ -19,6 +20,7 @@ const VIEW_CLASSES = {
   memory: MemoryView,
   simon: SimonView,
   stroke: StrokeView,
+  mahjong: MahjongView,
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -47,6 +49,7 @@ async function start() {
     document.fonts ? Promise.all([
       document.fonts.load('900 100px Montserrat'),
       document.fonts.load('900 40px "Noto Sans TC"'),
+      document.fonts.load('900 40px "Noto Serif TC"', '一二三四五六七八九萬東南西北中發'),
     ]) : Promise.resolve(),
     sleep(2500),
   ]).catch(() => {});
