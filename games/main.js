@@ -10,6 +10,7 @@ import { SchulteView } from './schulte.js';
 import { MazeView } from './maze.js';
 import { MemoryView } from './memory.js';
 import { SimonView } from './simon.js';
+import { StrokeView } from './stroke.js';
 
 /* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
 const VIEW_CLASSES = {
@@ -17,6 +18,7 @@ const VIEW_CLASSES = {
   maze: MazeView,
   memory: MemoryView,
   simon: SimonView,
+  stroke: StrokeView,
 };
 
 const $ = (s, r = document) => r.querySelector(s);
