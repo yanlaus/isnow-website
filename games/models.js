@@ -489,3 +489,83 @@ export function createIsland() {
   root.add(hang);
   return { group: root };
 }
+
+/* ===================== 村民（打怪、道具店客人） =====================
+   disguise：魔物扮村民 — 皮膚帶紫、紅眼發光（魔王級要睇清楚） */
+export function createVillager({ shirt = 0x3f7fd0, hat = 0x8a5a2b, skin = 0xf3c9a0, disguise = false } = {}) {
+  const root = new THREE.Group();
+  const skinMat = std(disguise ? 0xb59ac4 : skin, { flatShading: false, roughness: 0.6 });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 14), skinMat);
+  head.position.y = 0.14;
+  root.add(head);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.36, 0.44, 12), std(shirt, { roughness: 0.7 }));
+  body.position.y = -0.3;
+  root.add(body);
+  const hatMat = std(hat, { roughness: 0.8 });
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 16), hatMat);
+  brim.position.y = 0.36;
+  root.add(brim);
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.24, 0.2, 14), hatMat);
+  crown.position.y = 0.47;
+  root.add(crown);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.245, 0.245, 0.05, 14), std(0xf2e6c8));
+  band.position.y = 0.4;
+  root.add(band);
+  const eyes = [];
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshBasicMaterial({ color: disguise ? 0xff2020 : 0x1a1a22 }));
+    eye.position.set(0.09 * s, 0.18, 0.245);
+    root.add(eye);
+    eyes.push(eye);
+    if (disguise) {
+      const g = makeGlow(0xff2a2a, 0.32, 0.95);
+      g.position.set(0.09 * s, 0.18, 0.27);
+      root.add(g);
+    } else {
+      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: 0xf28a8a }));
+      cheek.position.set(0.16 * s, 0.09, 0.2);
+      cheek.scale.z = 0.4;
+      root.add(cheek);
+    }
+  }
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.018, 6, 14, Math.PI), new THREE.MeshBasicMaterial({ color: 0x5a2a1a }));
+  smile.rotation.z = Math.PI;
+  smile.position.set(0, 0.08, 0.255);
+  root.add(smile);
+  return { group: root };
+}
+
+/* ===================== 魔物（打怪） ===================== */
+export function createMonster() {
+  const root = new THREE.Group();
+  const purple = std(0x7b3fb0, { flatShading: false, roughness: 0.5 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.36, 18, 14), purple);
+  body.scale.set(1, 1.05, 0.9);
+  root.add(body);
+  const hornMat = std(0xf2e6d0, { roughness: 0.5 });
+  for (const s of [-1, 1]) {
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.26, 8), hornMat);
+    horn.position.set(0.19 * s, 0.38, 0);
+    horn.rotation.z = -0.45 * s;
+    root.add(horn);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
+    eye.position.set(0.13 * s, 0.1, 0.3);
+    root.add(eye);
+    const glow = makeGlow(0xff3030, 0.42, 0.95);
+    glow.position.set(0.13 * s, 0.1, 0.34);
+    root.add(glow);
+    const claw = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), purple);
+    claw.position.set(0.36 * s, -0.12, 0.12);
+    root.add(claw);
+    const fang = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 6), hornMat);
+    fang.rotation.x = Math.PI;
+    fang.position.set(0.06 * s, -0.12, 0.31);
+    root.add(fang);
+  }
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2a0a20 }));
+  mouth.rotation.x = Math.PI;
+  mouth.scale.set(1.2, 0.5, 0.6);
+  mouth.position.set(0, -0.06, 0.27);
+  root.add(mouth);
+  return { group: root };
+}

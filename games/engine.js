@@ -18,6 +18,7 @@ export class Engine {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
+    this.renderer.localClippingEnabled = true;   // 打怪：角色由窗台下面升起
     this.maxDpr = Math.min(window.devicePixelRatio || 1, 2);
     this.dpr = this.maxDpr;
     this.view = null;
