@@ -1692,3 +1692,60 @@ body:not(.booting) .boot:not(.error) { opacity: 0; visibility: hidden; }
   .qd-go { font-size: clamp(2.6rem, 20cqh, 5rem); }
   .sd-tile { font-size: clamp(1.2rem, 10cqh, 2.4rem); }
 }
+
+/* 搶答類回合（元素咒文、金幣速算、寶物搶認） */
+.dh-msg.good { color: var(--jade); }
+.qz-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(100%, 640px); flex: 1 1 auto; max-height: 150px; }
+.qz-grid .duel-btn { min-height: 64px; height: 100%; }
+@container (max-width: 480px) {
+  .qz-grid { grid-template-columns: 1fr 1fr; max-height: 170px; }
+}
+.qz-tally { font-weight: 700; color: var(--dim); font-size: .9rem; }
+.qz-tally b { font-family: var(--font-num); color: var(--gold-hi); font-size: 1.15em; margin: 0 2px; }
+.duel-btn.right { border-color: var(--jade); background: rgba(111, 174, 134, .25); color: #e2f4e8; }
+.duel-btn.wrong { border-color: var(--ruby); background: #5a1e26; }
+
+.st-ask { font-weight: 900; color: var(--dim); letter-spacing: .08em; }
+.st-ask.flip { display: inline-flex; align-items: center; gap: 6px; padding: 1px 12px; border-radius: 3px; color: #0b1a12; background: var(--jade); }
+.st-word {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 0 0 2px #000, 0 2px 0 #000, 0 0 16px rgba(0, 0, 0, .7);
+}
+.st-btn { gap: 10px; }
+.st-btn i { width: 1.1em; height: 1.1em; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px rgba(0, 0, 0, .5), 0 0 10px var(--c); }
+
+.ma-q { display: inline-flex; align-items: baseline; gap: 12px; }
+.ma-q b { font-family: var(--font-num); font-size: 2.6rem; font-weight: 700; color: #f3e6c4; line-height: 1.1; }
+.ma-q b.qm { color: var(--gold); }
+.ma-q span { font-size: 1.8rem; font-weight: 900; color: var(--gold); }
+.ma-q small { display: inline-flex; align-items: center; gap: 3px; font-size: .9rem; font-weight: 700; color: var(--dim); }
+.ma-btn { font-family: var(--font-num); font-size: 2rem; }
+
+.tr-ask { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 900; color: var(--gold-hi); letter-spacing: .08em; }
+.tr-pile { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 4px 10px; max-width: 520px; }
+.tr-gem { width: 66px; height: 66px; transform: rotate(var(--r)) translateY(var(--y)); }
+.tr-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.tr-item { width: 78px; height: 78px; border-radius: 6px; background: rgba(0, 0, 0, .3); border: 1px solid var(--gold-faint); }
+.tr-left { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+.tr-left img { width: 34px; height: 34px; opacity: .85; }
+.tr-btn img { width: 58px; height: 58px; }
+
+@supports (font-size: 1cqh) {
+  .st-word { font-size: clamp(2.2rem, 24cqh, 5rem); }
+  .ma-q b { font-size: clamp(1.8rem, 16cqh, 3.4rem); }
+  .ma-btn { font-size: clamp(1.4rem, 11cqh, 2.4rem); }
+  .tr-gem { width: clamp(52px, 20cqh, 92px); height: clamp(52px, 20cqh, 92px); }
+  .tr-item { width: clamp(52px, 22cqh, 96px); height: clamp(52px, 22cqh, 96px); }
+}
+/* 窄版（手機）：搶答掣同寶物縮細啲，唔好迫爆 */
+@container (max-width: 480px) {
+  .qz-grid { gap: 6px; }
+  .qz-grid .duel-btn { min-height: 50px; }
+  .tr-left img { width: 26px; height: 26px; }
+  .tr-btn img { width: 44px; height: 44px; }
+  .tr-ask { font-size: 1.1rem; }
+  .qz-tally { font-size: .8rem; }
+}

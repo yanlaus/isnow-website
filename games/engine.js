@@ -17,7 +17,7 @@ let snapRenderer = null;
 const snapCache = new Map();
 const srgbToLin = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 const linToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
-export function snapshot(key, build, size = 128) {
+export function snapshot(key, build, size = 128, zoom = 1) {
   if (snapCache.has(key)) return snapCache.get(key);
   const r = snapRenderer;
   if (!r) return '';
@@ -35,7 +35,7 @@ export function snapshot(key, build, size = 128) {
   obj.updateMatrixWorld(true);
   const sphere = new THREE.Box3().setFromObject(obj).getBoundingSphere(new THREE.Sphere());
   const cam = new THREE.PerspectiveCamera(30, 1, 0.01, 100);
-  const dist = sphere.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.02;
+  const dist = sphere.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.02 / zoom;
   cam.position.copy(sphere.center).add(new THREE.Vector3(0, 0.3, 1).normalize().multiplyScalar(dist));
   cam.lookAt(sphere.center);
   const rt = new THREE.WebGLRenderTarget(S, S);
