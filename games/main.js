@@ -593,6 +593,7 @@ async function start() {
   }
   function renderMenu() {
     updateStatus();
+    renderInstallTip();
     const ids = availableGames();
     $('#gameGrid').innerHTML = CATEGORIES.map(c => {
       const games = ids.filter(id => GAMES[id].category === c.id);
@@ -609,6 +610,30 @@ async function start() {
       return `<section class="cat"><h2 class="cat-head">${icon(c.icon)}<span>${c.name}</span></h2><div class="cards">${cards}</div></section>`;
     }).join('');
   }
+  /* ---------- 加到主畫面（PWA） ---------- */
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = () => navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderInstallTip(); });
+  function renderInstallTip() {
+    const tip = $('#installTip');
+    const show = !isStandalone() && !save.installDismissed && (isIOS || !!installEvt);
+    tip.hidden = !show;
+    if (!show) return;
+    $('.tip-install', tip).hidden = !installEvt;
+    if (isIOS) {
+      $('#installText').innerHTML = `撳${icon('share')}「分享」→${icon('addbox')}「加入主畫面」，就好似 App 咁開，冇網都玩到。`;
+      $('#installNote').textContent = '主畫面版本嘅紀錄同 Safari 分開，建議早啲加。';
+    } else {
+      $('#installText').textContent = '撳「安裝」就可以喺主畫面一撳開遊戲，冇網都玩到。';
+      $('#installNote').textContent = '';
+    }
+  }
+  function registerOffline() {
+    if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+    navigator.serviceWorker.register('games-sw.js', { scope: 'games' }).catch(() => { /* 唔支援就照網上玩 */ });
+  }
+
   function renderMute() {
     $$('.mute-toggle').forEach(b => {
       b.innerHTML = icon(save.muted ? 'sound-off' : 'sound-on');
@@ -645,6 +670,13 @@ async function start() {
       case 'again':         if (session) startGame(session.game, session.level); break;
       case 'change-diff':   closeOverlay(overlays.result); if (session) openDiff(session.game); break;
       case 'home':          goMenu(); break;
+      case 'install':
+        if (installEvt) {
+          installEvt.prompt();
+          installEvt.userChoice.finally(() => { installEvt = null; renderInstallTip(); });
+        }
+        break;
+      case 'dismiss-install': save.installDismissed = true; persist(); renderInstallTip(); break;
       default: break;
     }
   });
@@ -661,4 +693,5 @@ async function start() {
   await Promise.race([fontsReady, sleep(1200)]);
   measure();
   document.body.classList.remove('booting');
+  registerOffline();
 }

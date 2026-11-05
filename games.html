@@ -13,6 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700;900&family=Cinzel:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="games.webmanifest" />
+  <link rel="apple-touch-icon" href="games/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="games/icons/favicon-64.png" />
   <link rel="stylesheet" href="games.css" />
   <link rel="modulepreload" href="vendor/three/three.module.min.js" />
 </head>
@@ -47,6 +50,18 @@
         <div class="menu-stage" id="menuStage" aria-hidden="true"></div>
       </div>
       <div class="menu-list" id="menuList">
+        <div class="tip-card frame" id="installTip" hidden>
+          <span class="tip-ico" aria-hidden="true"><span data-icon="addbox"></span></span>
+          <div class="tip-body">
+            <b class="tip-title">加到主畫面，一撳就開</b>
+            <p class="tip-text" id="installText"></p>
+            <p class="tip-note" id="installNote"></p>
+          </div>
+          <div class="tip-actions">
+            <button class="cta tip-install" data-action="install" hidden>安裝</button>
+            <button class="ghost-btn tip-close" data-action="dismiss-install">知道了</button>
+          </div>
+        </div>
         <div id="gameGrid"></div>
         <button class="ghost-btn records-btn" data-action="records"><span data-icon="scroll"></span>冒險紀錄</button>
       </div>

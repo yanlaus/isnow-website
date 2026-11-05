@@ -96,7 +96,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ===== DQ 式視窗：深色底 + 金色雙邊 ===== */
 .pill-btn, .round-btn, .hero-chip, .timer-pill, .pill, .toast, .enemy-plate, .next-chip,
-.ghost-btn, .tool-btn, .cd-intro, .game-card, .level-card, .choice, .item-card {
+.ghost-btn, .tool-btn, .cd-intro, .game-card, .level-card, .choice, .item-card, .frame {
   background: var(--window);
   border: 1px solid var(--gold-line);
   outline: 1px solid var(--gold-faint);
@@ -1250,3 +1250,34 @@ body:not(.booting) .boot:not(.error) { opacity: 0; visibility: hidden; }
     transition-duration: .01ms !important;
   }
 }
+
+/* =========================================================
+   加到主畫面提示
+   ========================================================= */
+.tip-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  align-items: start;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 6px;
+}
+.tip-ico {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--gold-hi);
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid var(--gold-line);
+}
+.tip-ico .ico { width: 24px; height: 24px; }
+.tip-title { display: block; font-family: var(--font-serif); font-size: 1.12rem; font-weight: 900; color: var(--gold-hi); }
+.tip-text { margin-top: 2px; font-weight: 700; line-height: 1.65; }
+.tip-text .ico { color: var(--gold-hi); margin: 0 1px; }
+.tip-note { margin-top: 4px; font-size: .88rem; color: var(--dim); }
+.tip-note:empty { display: none; }
+.tip-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; }
+.tip-actions .cta, .tip-actions .ghost-btn { min-height: 50px; padding: 0 20px; }
