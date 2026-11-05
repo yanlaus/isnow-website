@@ -4,108 +4,137 @@ import { makeGlow, blobShadow } from './fx.js';
 
 const std = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, flatShading: true, ...opts });
 
-/* ===================== 勇者 ===================== */
+/* ===================== 勇者（正常比例騎士，頭身約 1:6） ===================== */
 export function createHero() {
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
 
-  const skin = std(0xf3c9a0, { flatShading: false, roughness: 0.6 });
-  const tunic = std(0x2f6fd6, { roughness: 0.6 });
-  const capeMat = std(0xd23b3b, { side: THREE.DoubleSide });
-  const metal = std(0xdfe5ef, { metalness: 0.55, roughness: 0.3 });
-  const gold = std(0xf5c842, { metalness: 0.6, roughness: 0.3 });
-  const leather = std(0x5a3a22);
-  const black = new THREE.MeshBasicMaterial({ color: 0x14141c });
+  const skin = std(0xd9ad88, { roughness: 0.65 });
+  const steel = std(0x9aa3b2, { metalness: 0.65, roughness: 0.35 });
+  const darkSteel = std(0x4f5766, { metalness: 0.55, roughness: 0.45 });
+  const navy = std(0x23314f, { roughness: 0.75 });
+  const crimson = std(0x7a1f27, { roughness: 0.8, side: THREE.DoubleSide });
+  const gold = std(0xc9a24a, { metalness: 0.75, roughness: 0.3 });
+  const leather = std(0x3e2a1c, { roughness: 0.85 });
+  const add = (geo, mat, x, y, z, parent = body) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    parent.add(m);
+    return m;
+  };
 
+  // 腳：靴、腿、脛甲
   for (const s of [-1, 1]) {
-    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.15, 0.19), leather);
-    boot.position.set(0.09 * s, 0.075, 0.02);
-    body.add(boot);
+    add(new THREE.BoxGeometry(0.085, 0.09, 0.15), leather, 0.065 * s, 0.045, 0.02);
+    add(new THREE.CylinderGeometry(0.042, 0.038, 0.34, 7), darkSteel, 0.065 * s, 0.26, 0);
+    add(new THREE.BoxGeometry(0.06, 0.16, 0.025), steel, 0.065 * s, 0.22, 0.042);
   }
-  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.38, 8), tunic);
-  torso.position.y = 0.33;
-  body.add(torso);
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.205, 0.215, 0.055, 8), leather);
-  belt.position.y = 0.25;
-  body.add(belt);
-  const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 0.03), gold);
-  buckle.position.set(0, 0.25, 0.21);
-  body.add(buckle);
-
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.175, 18, 14), skin);
-  head.position.y = 0.67;
-  body.add(head);
+  // 戰袍下擺 + 腰帶
+  add(new THREE.CylinderGeometry(0.115, 0.165, 0.2, 8), navy, 0, 0.44, 0);
+  add(new THREE.CylinderGeometry(0.122, 0.122, 0.045, 8), leather, 0, 0.535, 0);
+  add(new THREE.BoxGeometry(0.05, 0.045, 0.02), gold, 0, 0.535, 0.12);
+  // 胸甲 + 金邊領
+  add(new THREE.CylinderGeometry(0.14, 0.118, 0.27, 8), steel, 0, 0.69, 0);
+  const collar = add(new THREE.TorusGeometry(0.105, 0.016, 5, 14), gold, 0, 0.82, 0);
+  collar.rotation.x = Math.PI / 2;
+  add(new THREE.BoxGeometry(0.018, 0.2, 0.012), gold, 0, 0.69, 0.138);
+  // 肩甲 + 手臂 + 護手
   for (const s of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 6), black);
-    eye.position.set(0.065 * s, 0.665, 0.158);
-    eye.scale.y = 1.3;
-    body.add(eye);
+    const pauldron = add(new THREE.SphereGeometry(0.075, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), steel, 0.165 * s, 0.78, 0);
+    pauldron.rotation.z = -0.35 * s;
+    const trim = add(new THREE.TorusGeometry(0.068, 0.01, 4, 12), gold, 0.172 * s, 0.762, 0);
+    trim.rotation.x = Math.PI / 2;
+    trim.rotation.y = 0.35 * s;
+    const arm = add(new THREE.CylinderGeometry(0.034, 0.03, 0.27, 6), darkSteel, 0.19 * s, 0.62, 0.01);
+    arm.rotation.z = 0.08 * s;
+    add(new THREE.BoxGeometry(0.06, 0.07, 0.06), steel, 0.205 * s, 0.47, 0.02);
   }
-  const helm = new THREE.Mesh(new THREE.SphereGeometry(0.19, 18, 8, 0, Math.PI * 2, 0, Math.PI * 0.52), metal);
-  helm.position.y = 0.685;
-  body.add(helm);
-  const band = new THREE.Mesh(new THREE.TorusGeometry(0.185, 0.022, 6, 18), gold);
-  band.rotation.x = Math.PI / 2;
-  band.position.y = 0.69;
-  body.add(band);
-  const plume = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.2, 6), capeMat);
-  plume.position.set(0, 0.93, -0.03);
-  plume.rotation.x = -0.35;
-  body.add(plume);
+  // 頭、頭盔（護鼻、冠飾、羽飾）
+  add(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 6), skin, 0, 0.845, 0);
+  add(new THREE.SphereGeometry(0.078, 12, 10), skin, 0, 0.905, 0.005);
+  const helm = add(new THREE.SphereGeometry(0.088, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), steel, 0, 0.915, 0);
+  helm.scale.set(1, 1.08, 1.05);
+  add(new THREE.BoxGeometry(0.016, 0.07, 0.016), steel, 0, 0.9, 0.086);
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.02, 0.06, 0.07), steel, 0.08 * s, 0.88, 0.02);
+  add(new THREE.BoxGeometry(0.016, 0.03, 0.17), gold, 0, 1.0, -0.01);
+  const plume = add(new THREE.ConeGeometry(0.03, 0.2, 6), crimson, 0, 1.03, -0.09);
+  plume.rotation.x = -1.15;
 
-  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.44, 1, 4), capeMat);
-  cape.position.set(0, 0.36, -0.215);
-  cape.rotation.x = 0.16;
-  body.add(cape);
+  // 披風（肩到小腿）
+  const capeGeo = new THREE.PlaneGeometry(0.34, 0.66, 2, 8);
+  capeGeo.translate(0, -0.33, 0);
+  const cape = add(capeGeo, crimson, 0, 0.8, -0.13);
+  cape.rotation.x = 0.1;
+  const capeBase = capeGeo.attributes.position.array.slice();
 
-  // 盾（左手，喺 +x）
+  // 鳶形盾（左手，喺 +x）
+  const kite = new THREE.Shape();
+  kite.moveTo(0, 0.17);
+  kite.quadraticCurveTo(0.12, 0.16, 0.12, 0.06);
+  kite.quadraticCurveTo(0.1, -0.08, 0, -0.18);
+  kite.quadraticCurveTo(-0.1, -0.08, -0.12, 0.06);
+  kite.quadraticCurveTo(-0.12, 0.16, 0, 0.17);
   const shield = new THREE.Group();
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 14), std(0x2457a6, { metalness: 0.3, roughness: 0.4 }));
-  disc.rotation.z = Math.PI / 2;
-  shield.add(disc);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 6, 18), gold);
-  rim.rotation.y = Math.PI / 2;
-  shield.add(rim);
-  const emblem = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), gold);
-  emblem.position.x = 0.03;
-  shield.add(emblem);
-  shield.position.set(0.26, 0.36, 0.03);
+  const face = new THREE.Mesh(new THREE.ExtrudeGeometry(kite, { depth: 0.025, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 1 }), navy);
+  shield.add(face);
+  const cross1 = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.24, 0.012), gold);
+  cross1.position.set(0, -0.01, 0.042);
+  shield.add(cross1);
+  const cross2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.022, 0.012), gold);
+  cross2.position.set(0, 0.06, 0.042);
+  shield.add(cross2);
+  shield.position.set(0.235, 0.58, 0.05);
+  shield.rotation.y = 0.55;
   body.add(shield);
 
-  // 劍（右手，喺 -x）
+  // 長劍（右手，喺 -x），劍尖向上
   const sword = new THREE.Group();
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.44, 0.018), metal);
-  blade.position.y = 0.24;
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.5, 0.012), std(0xd5dbe4, { metalness: 0.8, roughness: 0.2 }));
+  blade.position.y = 0.3;
   sword.add(blade);
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.035, 0.045), gold);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.023, 0.06, 4), blade.material);
+  tip.position.y = 0.58;
+  tip.rotation.y = Math.PI / 4;
+  sword.add(tip);
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.022, 0.03), gold);
+  guard.position.y = 0.045;
   sword.add(guard);
-  const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.1, 6), leather);
-  hilt.position.y = -0.06;
-  sword.add(hilt);
-  sword.position.set(-0.27, 0.28, 0.08);
-  sword.rotation.z = 0.12;
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.09, 6), leather);
+  sword.add(grip);
+  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), gold);
+  pommel.position.y = -0.05;
+  sword.add(pommel);
+  sword.position.set(-0.215, 0.45, 0.07);
+  sword.rotation.z = 0.06;
   body.add(sword);
 
-  const shadow = blobShadow(0.75, 0.5);
+  const shadow = blobShadow(0.62, 0.5);
   root.add(shadow);
 
+  const capePos = capeGeo.attributes.position;
   let celebrate = 0;
   return {
     group: root,
     body,
     sword,
     update(dt, t, hop = 0) {
-      const idle = Math.sin(t * 2.4) * 0.018;
+      const idle = Math.sin(t * 2) * 0.01;
       body.position.y = idle + hop;
-      cape.rotation.x = 0.16 + Math.sin(t * 3.1) * 0.05 + hop * 1.5;
+      // 披風隨風擺動（越近下擺越大）
+      for (let i = 0; i < capePos.count; i++) {
+        const y = capeBase[i * 3 + 1];
+        const k = -y / 0.66;
+        capePos.setZ(i, capeBase[i * 3 + 2] - k * k * (0.06 + hop * 0.6) - Math.sin(t * 2.6 + k * 2 + capeBase[i * 3] * 4) * 0.025 * k);
+      }
+      capePos.needsUpdate = true;
       shadow.scale.setScalar(1 - hop * 1.6);
       if (celebrate > 0) {
         celebrate = Math.max(0, celebrate - dt);
         const k = celebrate / 1.4;
-        body.position.y += Math.abs(Math.sin(k * Math.PI * 3)) * 0.25 * k;
-        sword.rotation.z = 0.12 - Math.sin((1 - k) * Math.PI) * 2.6;
-        sword.position.y = 0.28 + Math.sin((1 - k) * Math.PI) * 0.3;
+        body.position.y += Math.abs(Math.sin(k * Math.PI * 3)) * 0.18 * k;
+        sword.rotation.z = 0.06 - Math.sin((1 - k) * Math.PI) * 2.6;
+        sword.position.y = 0.45 + Math.sin((1 - k) * Math.PI) * 0.3;
       }
     },
     celebrate() { celebrate = 1.4; },
@@ -436,136 +465,151 @@ export function createTorch({ light = true, height = 1.1 } = {}) {
   };
 }
 
-/* ===================== 漂浮水晶 ===================== */
-export function createCrystal(color) {
-  const root = new THREE.Group();
-  const m = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.3),
-    std(color, { emissive: color, emissiveIntensity: 0.9, metalness: 0.2, roughness: 0.2 }),
-  );
-  m.scale.y = 1.9;
-  root.add(m);
-  const glow = makeGlow(color, 1.6, 0.7);
-  root.add(glow);
-  const seed = Math.random() * 6;
-  return {
-    group: root,
-    update(dt, t) {
-      m.rotation.y = t * 0.8 + seed;
-      root.position.y = root.userData.baseY + Math.sin(t * 1.3 + seed) * 0.2;
-    },
-  };
-}
-
-/* ===================== 浮空島（主選單）===================== */
-export function createIsland() {
-  const root = new THREE.Group();
-  const grass = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.15, 0.32, 10), std(0x58b04f, { roughness: 0.9 }));
-  grass.position.y = -0.16;
-  root.add(grass);
-  const dirt = new THREE.Mesh(new THREE.CylinderGeometry(2.15, 1.75, 0.55, 10), std(0x7a5232, { roughness: 1 }));
-  dirt.position.y = -0.6;
-  root.add(dirt);
-  const rock = new THREE.Mesh(new THREE.ConeGeometry(1.75, 2.6, 10), std(0x6b5f6e, { roughness: 1 }));
-  rock.rotation.x = Math.PI;
-  rock.position.y = -2.17;
-  root.add(rock);
-  const bushMat = std(0x3f8f45, { roughness: 0.9 });
-  [[-1.6, 0.6], [1.7, 0.2], [-0.8, -1.5], [1.2, -1.3], [0.2, 1.8]].forEach(([x, z], i) => {
-    const b = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28 + (i % 2) * 0.1), bushMat);
-    b.position.set(x, 0.12, z);
-    root.add(b);
-  });
-  const stoneMat = std(0x9a93a6, { roughness: 1 });
-  [[1.5, 1.2], [-1.9, -0.4], [0.6, -1.8]].forEach(([x, z]) => {
-    const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.18), stoneMat);
-    s.position.set(x, 0.05, z);
-    root.add(s);
-  });
-  // 掛喺島底嘅水晶
-  const hang = new THREE.Mesh(new THREE.OctahedronGeometry(0.25), std(0x7ad7ff, { emissive: 0x2a8cff, emissiveIntensity: 0.8 }));
-  hang.scale.y = 2;
-  hang.position.set(0.6, -1.6, 0.9);
-  root.add(hang);
-  return { group: root };
-}
-
 /* ===================== 村民（打怪、道具店客人） =====================
-   disguise：魔物扮村民 — 皮膚帶紫、紅眼發光（魔王級要睇清楚） */
-export function createVillager({ shirt = 0x3f7fd0, hat = 0x8a5a2b, skin = 0xf3c9a0, disguise = false } = {}) {
+   成人比例、大地色衣著；disguise：魔物扮村民 — 灰紫膚色、紅眼發光（魔王級要睇清楚） */
+export function createVillager({ shirt = 0x6b5a3a, hat = 0x4a3a2a, skin = 0xd9ad88, disguise = false, style } = {}) {
   const root = new THREE.Group();
-  const skinMat = std(disguise ? 0xb59ac4 : skin, { flatShading: false, roughness: 0.6 });
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 14), skinMat);
-  head.position.y = 0.14;
+  const look = style != null ? style : Math.floor(Math.random() * 3);   // 0 闊邊帽、1 兜帽、2 頭巾＋鬚
+  const skinMat = std(disguise ? 0x8e7f9c : skin, { roughness: 0.65 });
+  const cloth = std(shirt, { roughness: 0.85 });
+  const dark = std(0x2a2018, { roughness: 0.9 });
+
+  // 身體：長袍 + 披肩
+  const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.33, 0.5, 9), cloth);
+  robe.position.y = -0.31;
+  root.add(robe);
+  const mantle = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.27, 0.14, 9), std(hat, { roughness: 0.85 }));
+  mantle.position.y = -0.07;
+  root.add(mantle);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.08, 7), skinMat);
+  neck.position.y = 0.01;
+  root.add(neck);
+  // 頭
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), skinMat);
+  head.scale.set(0.92, 1.05, 0.95);
+  head.position.y = 0.17;
   root.add(head);
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.36, 0.44, 12), std(shirt, { roughness: 0.7 }));
-  body.position.y = -0.3;
-  root.add(body);
-  const hatMat = std(hat, { roughness: 0.8 });
-  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 16), hatMat);
-  brim.position.y = 0.36;
-  root.add(brim);
-  const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.24, 0.2, 14), hatMat);
-  crown.position.y = 0.47;
-  root.add(crown);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.245, 0.245, 0.05, 14), std(0xf2e6c8));
-  band.position.y = 0.4;
-  root.add(band);
-  const eyes = [];
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.05, 5), skinMat);
+  nose.rotation.x = Math.PI / 2;
+  nose.position.set(0, 0.15, 0.155);
+  root.add(nose);
   for (const s of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshBasicMaterial({ color: disguise ? 0xff2020 : 0x1a1a22 }));
-    eye.position.set(0.09 * s, 0.18, 0.245);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(disguise ? 0.026 : 0.018, 8, 6), new THREE.MeshBasicMaterial({ color: disguise ? 0xff2a2a : 0x1a1410 }));
+    eye.position.set(0.055 * s, 0.195, 0.135);
     root.add(eye);
-    eyes.push(eye);
     if (disguise) {
-      const g = makeGlow(0xff2a2a, 0.32, 0.95);
-      g.position.set(0.09 * s, 0.18, 0.27);
+      const g = makeGlow(0xff2a2a, 0.3, 0.95);
+      g.position.set(0.055 * s, 0.195, 0.16);
       root.add(g);
-    } else {
-      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: 0xf28a8a }));
-      cheek.position.set(0.16 * s, 0.09, 0.2);
-      cheek.scale.z = 0.4;
-      root.add(cheek);
     }
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.012, 0.012), dark);
+    brow.position.set(0.055 * s, 0.232, 0.138);
+    brow.rotation.z = (disguise ? 0.35 : -0.1) * s;
+    root.add(brow);
   }
-  const smile = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.018, 6, 14, Math.PI), new THREE.MeshBasicMaterial({ color: 0x5a2a1a }));
-  smile.rotation.z = Math.PI;
-  smile.position.set(0, 0.08, 0.255);
-  root.add(smile);
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.008, 0.01), dark);
+  mouth.position.set(0, 0.1, 0.148);
+  root.add(mouth);
+
+  if (look === 0) {
+    // 闊邊毛氈帽
+    const hatMat = std(hat, { roughness: 0.9 });
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.3, 0.025, 16), hatMat);
+    brim.position.y = 0.31;
+    brim.rotation.x = -0.08;
+    root.add(brim);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 0.14, 12), hatMat);
+    crown.position.y = 0.39;
+    root.add(crown);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.03, 12), dark);
+    band.position.y = 0.34;
+    root.add(band);
+  } else if (look === 1) {
+    // 兜帽
+    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.205, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), std(hat, { roughness: 0.9, side: THREE.DoubleSide }));
+    hood.position.set(0, 0.19, -0.03);
+    hood.rotation.x = -0.35;
+    root.add(hood);
+  } else {
+    // 頭巾 + 鬍鬚
+    const wrap = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.45), std(hat, { roughness: 0.9 }));
+    wrap.position.y = 0.2;
+    root.add(wrap);
+    const beard = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.55), std(disguise ? 0x3a3040 : 0x5a4a3a, { roughness: 1 }));
+    beard.position.set(0, 0.14, 0.04);
+    beard.scale.set(1, 1.1, 0.9);
+    root.add(beard);
+  }
   return { group: root };
 }
 
-/* ===================== 魔物（打怪） ===================== */
+/* ===================== 魔物「影魔」（打怪） ===================== */
 export function createMonster() {
   const root = new THREE.Group();
-  const purple = std(0x7b3fb0, { flatShading: false, roughness: 0.5 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.36, 18, 14), purple);
-  body.scale.set(1, 1.05, 0.9);
-  root.add(body);
-  const hornMat = std(0xf2e6d0, { roughness: 0.5 });
+  const hide = std(0x2b2233, { roughness: 0.45, metalness: 0.25 });
+  const bone = std(0xd8cdb5, { roughness: 0.6 });
+  const wingMat = std(0x3a2a48, { roughness: 0.7, side: THREE.DoubleSide });
+
+  const torso = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3), hide);
+  torso.scale.set(1.05, 1.15, 0.85);
+  torso.position.y = -0.12;
+  root.add(torso);
+  const head = new THREE.Mesh(new THREE.DodecahedronGeometry(0.19), hide);
+  head.scale.set(1, 0.9, 0.95);
+  head.position.y = 0.22;
+  root.add(head);
+  // 胸口熔岩核
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color: 0xff6a2a }));
+  core.position.set(0, -0.08, 0.25);
+  core.scale.y = 1.6;
+  root.add(core);
+  const coreGlow = makeGlow(0xff5a1a, 0.45, 0.7);
+  coreGlow.position.set(0, -0.08, 0.28);
+  root.add(coreGlow);
   for (const s of [-1, 1]) {
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.26, 8), hornMat);
-    horn.position.set(0.19 * s, 0.38, 0);
-    horn.rotation.z = -0.45 * s;
+    // 彎骨角
+    const horn = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.026, 5, 10, Math.PI * 0.6), bone);
+    horn.position.set(0.09 * s, 0.28, -0.02);
+    horn.rotation.set(0, s > 0 ? 0 : Math.PI, 0.4);
     root.add(horn);
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
-    eye.position.set(0.13 * s, 0.1, 0.3);
+    // 斜長紅眼
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.022, 0.02), new THREE.MeshBasicMaterial({ color: 0xff3a2a }));
+    eye.position.set(0.062 * s, 0.24, 0.165);
+    eye.rotation.z = -0.35 * s;
     root.add(eye);
-    const glow = makeGlow(0xff3030, 0.42, 0.95);
-    glow.position.set(0.13 * s, 0.1, 0.34);
+    const glow = makeGlow(0xff3020, 0.38, 0.95);
+    glow.position.set(0.062 * s, 0.24, 0.19);
     root.add(glow);
-    const claw = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), purple);
-    claw.position.set(0.36 * s, -0.12, 0.12);
-    root.add(claw);
-    const fang = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 6), hornMat);
+    // 獠牙
+    const fang = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.06, 5), bone);
     fang.rotation.x = Math.PI;
-    fang.position.set(0.06 * s, -0.12, 0.31);
+    fang.position.set(0.035 * s, 0.13, 0.16);
     root.add(fang);
+    // 爪
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.28, 6), hide);
+    arm.position.set(0.31 * s, -0.12, 0.08);
+    arm.rotation.z = 0.5 * s;
+    root.add(arm);
+    for (let k = -1; k <= 1; k++) {
+      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.08, 4), bone);
+      claw.position.set(0.39 * s + k * 0.02, -0.25, 0.12 + k * 0.025);
+      claw.rotation.x = Math.PI;
+      root.add(claw);
+    }
+    // 蝠翼
+    const wing = new THREE.Shape();
+    wing.moveTo(0, 0);
+    wing.lineTo(0.42, 0.3);
+    wing.lineTo(0.36, 0.05);
+    wing.lineTo(0.3, 0.12);
+    wing.lineTo(0.24, -0.06);
+    wing.lineTo(0.16, 0.02);
+    wing.lineTo(0, -0.14);
+    const w = new THREE.Mesh(new THREE.ShapeGeometry(wing), wingMat);
+    w.position.set(0.12 * s, 0.02, -0.15);
+    w.scale.x = s;
+    w.rotation.y = -0.5 * s;
+    root.add(w);
   }
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2a0a20 }));
-  mouth.rotation.x = Math.PI;
-  mouth.scale.set(1.2, 0.5, 0.6);
-  mouth.position.set(0, -0.06, 0.27);
-  root.add(mouth);
   return { group: root };
 }

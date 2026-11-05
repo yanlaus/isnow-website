@@ -19,8 +19,8 @@ const ITEMS = [
 ];
 const NOTES = [5, 10, 20, 50, 100];
 const NAMES = ['村長', '旅人', '鐵匠', '漁夫', '農婦', '吟遊詩人', '騎士', '魔法師'];
-const SHIRTS = [0x3f7fd0, 0x3fa35a, 0xd0703f, 0xc04f7a, 0x7a5ac0, 0x2f9a9a];
-const HATS = [0x8a5a2b, 0x2f5a3a, 0x7a2a2a, 0x3a3a6a, 0x5a4a3a];
+const SHIRTS = [0x6b5a3a, 0x4f5f3a, 0x6a3a2e, 0x3f4a5e, 0x7a6a4a, 0x5a4a5e];
+const HATS = [0x3a2a1c, 0x4a3a2a, 0x2f3a2a, 0x5a4636, 0x2e2a3a];
 
 function signTexture() {
   const c = document.createElement('canvas');

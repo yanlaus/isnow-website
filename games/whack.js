@@ -9,8 +9,8 @@ const SX = 1.8, SY = 1.8;          // 窗口間距
 const WW = 1.24, WH = 1.3;         // 窗口開口
 const LIMIT = 60;
 const UP_T = 0.18;
-const SHIRTS = [0x3f7fd0, 0x3fa35a, 0xd0703f, 0xc04f7a];
-const HATS = [0x8a5a2b, 0x2f5a3a, 0x7a2a2a, 0x3a3a6a];
+const SHIRTS = [0x6b5a3a, 0x4f5f3a, 0x6a3a2e, 0x3f4a5e, 0x7a6a4a, 0x5a4a5e];
+const HATS = [0x3a2a1c, 0x4a3a2a, 0x2f3a2a, 0x5a4636, 0x2e2a3a];
 
 const lerp = (a, b, k) => a + (b - a) * k;
 
@@ -54,7 +54,7 @@ export class WhackView {
       mode: 'board',
       counter: '得分 <b>0</b>',
       intro: '魔物入侵村莊！',
-      prep: '紫色紅眼＝魔物（要打）；戴帽笑臉＝村民（唔好打）',
+      prep: '有角紅眼＝魔物（要打）；戴帽村民（唔好打）',
       startMsg: '魔物出現就即刻點佢！',
       timeLimit: LIMIT,
     };
