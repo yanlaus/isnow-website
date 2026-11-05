@@ -1,6 +1,6 @@
 /* 腦力勇者：離線快取（只控制 games.html 同 games/…，唔影響 iSnow 其他頁）
    同源檔案：stale-while-revalidate（即開即玩，背景更新）；Google Fonts：快取咗就冇網都有字 */
-const VERSION = 'bq-v1';
+const VERSION = 'bq-v2';
 const FONT_CACHE = 'bq-fonts';
 const CORE = [
   'games.html', 'games.css', 'games.webmanifest',
@@ -10,6 +10,7 @@ const CORE = [
   'games/models.js', 'games/items.js', 'games/textures.js', 'games/menu.js', 'games/grid-world.js',
   'games/schulte.js', 'games/maze.js', 'games/memory.js', 'games/simon.js', 'games/stroke.js',
   'games/mahjong.js', 'games/whack.js', 'games/shop.js', 'games/idiom.js', 'games/idioms.js',
+  'games/charts.js', 'games/share.js',
 ];
 
 self.addEventListener('install', e => {

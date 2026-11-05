@@ -156,6 +156,7 @@
           <div class="rec-title" id="rTitle">見習冒險者</div>
           <div class="exp-bar big" aria-hidden="true"><i id="rExp"></i></div>
           <div class="rec-exp" id="rExpText"></div>
+          <div class="rec-summary" id="rSummary"></div>
         </div>
       </div>
       <div class="rec-list" id="recList"></div>
@@ -180,6 +181,7 @@
         <p class="res-note">
           <span class="res-badge" id="resBadge" hidden></span>
           <span class="res-compare" id="resCompare" hidden></span>
+          <span class="res-trend" id="resTrend" hidden></span>
         </p>
       </div>
       <div class="res-side">
@@ -192,8 +194,22 @@
         <div class="res-actions">
           <button class="cta" data-action="again"><span data-icon="play"></span>再戰一次</button>
           <button class="ghost-btn" data-action="change-diff">轉難度</button>
+          <button class="ghost-btn" data-action="share"><span data-icon="share"></span>分享</button>
           <button class="ghost-btn" data-action="home">返回據點</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 分享戰績（唔支援系統分享時） ================= -->
+  <div class="overlay" id="shareOverlay" role="dialog" aria-modal="true" aria-labelledby="shareTitle" hidden>
+    <div class="panel share-panel">
+      <h2 class="panel-title" id="shareTitle"><span data-icon="share"></span>分享戰績</h2>
+      <img class="share-img" id="shareImg" alt="戰績圖" />
+      <p class="panel-sub">長按圖片，就可以儲存或者傳俾屋企人。</p>
+      <div class="stack">
+        <a class="cta" id="shareDownload" download="腦力勇者戰績.png"><span data-icon="download"></span>儲存圖片</a>
+        <button class="ghost-btn" data-action="close-share">返回</button>
       </div>
     </div>
   </div>

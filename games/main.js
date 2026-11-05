@@ -3,7 +3,10 @@ import { Engine, webglAvailable, rectOf } from './engine.js';
 import {
   save, persist, expToNext, titleFor, addExp, GAMES, CATEGORIES, gameIds, keyOf, isUnlocked, sizeLabel,
   starsTotal, starsMax, isBetter, fmtTime, fmtTimeHtml, fmtBest,
+  pushHistory, historyOf, markPlayed, playsInLastDays, streakDays,
 } from './store.js';
+import { sparkline } from './charts.js';
+import { makeShareCard } from './share.js';
 import { Sound, buzz } from './sound.js';
 import { icon } from './icons.js';
 import { MenuView } from './menu.js';
@@ -247,6 +250,7 @@ async function start() {
      ========================================================= */
   const overlays = {
     diff: $('#diffOverlay'), records: $('#recordsOverlay'), result: $('#resultOverlay'), retreat: $('#retreatOverlay'),
+    share: $('#shareOverlay'),
   };
   const countdownEl = $('#countdown');
   function openOverlay(el) {
@@ -368,6 +372,10 @@ async function start() {
     const firstClear = prevBest == null;
     const value = isScore ? score : Math.round(time * 10) / 10;
     const isRecord = isBetter(game, value, prevBest);
+    const prevHist = historyOf(key);
+    const last = prevHist.length ? prevHist[prevHist.length - 1][1] : null;
+    pushHistory(key, value);
+    markPlayed();
     const unlocksBoss = firstClear && g.levels.some(l => l.unlock === level.id);
     if (isRecord) save.best[key] = value;
     save.stars[key] = Math.max(save.stars[key] || 0, stars);
@@ -389,14 +397,12 @@ async function start() {
     badge.hidden = !isRecord;
     badge.innerHTML = firstClear ? `${icon('medal')}${isScore ? '首次挑戰' : '首次攻略'}` : `${icon('trophy')}新紀錄`;
     const compare = $('#resCompare');
-    compare.hidden = firstClear;
-    if (!firstClear) {
-      if (isScore) {
-        compare.textContent = isRecord ? `比之前最佳多 ${value - prevBest} ${g.unit}` : `最佳紀錄 ${fmtBest(game, prevBest)}`;
-      } else {
-        compare.textContent = isRecord ? `比之前最佳快 ${(prevBest - value).toFixed(1)} 秒` : `最佳紀錄 ${fmtTime(prevBest)}`;
-      }
-    }
+    const note = firstClear ? '' : compareText(game, value, last, prevBest, isRecord);
+    compare.hidden = !note;
+    compare.innerHTML = note;
+    const trend = $('#resTrend');
+    trend.innerHTML = sparkline(historyOf(key).slice(-10).map(h => h[1]), { invert: !isScore });
+    trend.hidden = !trend.innerHTML;
 
     $('#resStats').innerHTML = lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('');
     $('#resExp').innerHTML = `獲得經驗值 <b>+${expTotal} EXP</b>`;
@@ -414,6 +420,54 @@ async function start() {
     }
     Sound.victory();
     openOverlay(overlays.result);
+
+    // 戰績圖喺背景先整好，撳「分享」時即刻用（iOS 分享要喺撳掣嗰下觸發）
+    const now = new Date();
+    shareInfo = {
+      gameTitle: g.title,
+      levelName: `${level.name} ${sizeLabel(level)}`,
+      resultTitle: title,
+      label: isScore ? g.scoreLabel : '用時',
+      value: isScore ? `${score} ${g.unit}` : fmtTime(time),
+      stars,
+      note: firstClear ? '首次攻略！' : ((compare.querySelector('b.up') || {}).textContent || ''),
+      lv: save.level,
+      playerTitle: titleFor(save.level),
+      date: `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`,
+      text: `我喺「腦力勇者」${g.title}（${level.name}）${isScore ? `攞咗 ${score} ${g.unit}` : `用咗 ${fmtTime(time)}`}！`,
+    };
+    shareCard = null;
+    setTimeout(() => { if (shareInfo && !shareCard) shareCard = makeShareCard(shareInfo).catch(() => null); }, 900);
+  }
+
+  /* 同上次／最佳比較（正面講法；「比上次差」就淡淡哋列出上次同最佳） */
+  function compareText(game, value, last, prevBest, isRecord) {
+    const g = GAMES[game];
+    const isScore = g.metric === 'score';
+    const amt = d => (isScore ? `${Math.abs(d)} ${g.unit}` : `${Math.abs(d).toFixed(1)} 秒`);
+    if (isRecord) return `<b class="up">比之前最佳${isScore ? '多' : '快'} ${amt(value - prevBest)}！</b>`;
+    const better = last == null ? 0 : (isScore ? value - last : last - value);
+    const bestTxt = `最佳 ${fmtBest(game, prevBest)}`;
+    if (last != null && better > (isScore ? 0 : 0.04)) return `<b class="up">比上次${isScore ? '多' : '快'} ${amt(better)}！</b>・${bestTxt}`;
+    if (last != null && Math.abs(better) <= (isScore ? 0 : 0.04)) return `同上次一樣・${bestTxt}`;
+    return last != null ? `上次 ${fmtBest(game, last)}・${bestTxt}` : bestTxt;
+  }
+
+  /* ---------- 分享戰績 ---------- */
+  let shareInfo = null;
+  let shareCard = null;
+  async function shareResult() {
+    if (!shareInfo) return;
+    if (!shareCard) shareCard = makeShareCard(shareInfo).catch(() => null);
+    const card = await shareCard;
+    if (!card) return;
+    const file = typeof File === 'function' ? new File([card.blob], 'brain-quest.png', { type: 'image/png' }) : null;
+    if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: shareInfo.text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    $('#shareImg').src = card.url;
+    $('#shareDownload').href = card.url;
+    openOverlay(overlays.share);
   }
 
   /* =========================================================
@@ -459,6 +513,7 @@ async function start() {
     $('#rTitle').textContent = titleFor(save.level);
     $('#rExp').style.width = `${Math.min(100, (save.exp / need) * 100)}%`;
     $('#rExpText').textContent = `經驗值 ${save.exp} / ${need}．出戰 ${save.plays} 次`;
+    $('#rSummary').innerHTML = `${icon('calendar')}最近 7 日出戰 <b>${playsInLastDays(7)}</b> 局．連續 <b>${streakDays()}</b> 日`;
     const rows = [];
     for (const game of availableGames()) {
       const g = GAMES[game];
@@ -466,8 +521,9 @@ async function start() {
       for (const l of g.levels) {
         const key = keyOf(game, l);
         const best = save.best[key];
+        const spark = sparkline(historyOf(key).slice(-10).map(h => h[1]), { w: 64, h: 24, invert: g.metric !== 'score', cls: 'spark mini' });
         const val = best != null
-          ? `${fmtBest(game, best)}<span class="stars">${starText(save.stars[key] || 0)}</span>`
+          ? `${spark}${fmtBest(game, best)}<span class="stars">${starText(save.stars[key] || 0)}</span>`
           : `<span class="none">${isUnlocked(game, l) ? '未挑戰' : `${icon('lock')}未解鎖`}</span>`;
         rows.push(`<div class="rec-row"><span>${l.name}　${sizeLabel(l)}</span><span>${val}</span></div>`);
       }
@@ -670,6 +726,8 @@ async function start() {
       case 'again':         if (session) startGame(session.game, session.level); break;
       case 'change-diff':   closeOverlay(overlays.result); if (session) openDiff(session.game); break;
       case 'home':          goMenu(); break;
+      case 'share':         shareResult(); break;
+      case 'close-share':   closeOverlay(overlays.share); break;
       case 'install':
         if (installEvt) {
           installEvt.prompt();
@@ -684,7 +742,12 @@ async function start() {
   overlays.records.addEventListener('click', e => { if (e.target === overlays.records) closeOverlay(overlays.records); });
 
   // 自動測試用（網址加 ?debug 先會開）
-  if (new URLSearchParams(location.search).has('debug')) window.__bh = { views, getView, engine, Timer };
+  if (new URLSearchParams(location.search).has('debug')) {
+    window.__bh = {
+      views, getView, engine, Timer, save,
+      shareUrl: () => (shareCard || (shareInfo ? makeShareCard(shareInfo) : Promise.resolve(null))).then(c => c && c.url),
+    };
+  }
 
   /* ---------- 啟動 ---------- */
   $$('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon, el.className); });

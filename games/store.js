@@ -2,7 +2,7 @@
 
 const STORE_KEY = 'brainHero.v1';
 
-const freshSave = () => ({ exp: 0, level: 1, plays: 0, best: {}, stars: {}, muted: false });
+const freshSave = () => ({ exp: 0, level: 1, plays: 0, best: {}, stars: {}, hist: {}, days: {}, muted: false });
 
 function loadSave() {
   try {
@@ -12,6 +12,8 @@ function loadSave() {
     const s = Object.assign(freshSave(), data);
     s.best = Object.assign({}, data.best);
     s.stars = Object.assign({}, data.stars);
+    s.hist = Object.assign({}, data.hist);
+    s.days = Object.assign({}, data.days);
     return s;
   } catch (_) {
     return freshSave();
@@ -22,6 +24,36 @@ export const save = loadSave();
 
 export function persist() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(save)); } catch (_) { /* 私密瀏覽：照玩，只係唔記錄 */ }
+}
+
+/* ---------- 日子、出戰紀錄、成績歷史 ---------- */
+// 本地日期 → 20261105 呢類數字（跨時區旅行都以部機時間為準）
+export const dayKey = (d = new Date()) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+export const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+const HIST_MAX = 20;
+export function pushHistory(key, value) {
+  const h = save.hist[key] || (save.hist[key] = []);
+  h.push([dayKey(), value]);
+  if (h.length > HIST_MAX) h.splice(0, h.length - HIST_MAX);
+}
+export const historyOf = key => save.hist[key] || [];
+
+export function markPlayed() {
+  const k = dayKey();
+  save.days[k] = (save.days[k] || 0) + 1;
+}
+export function playsInLastDays(n, now = new Date()) {
+  let sum = 0;
+  for (let i = 0; i < n; i++) sum += save.days[dayKey(addDays(now, -i))] || 0;
+  return sum;
+}
+/* 連續出戰日數：今日未玩都唔算斷（由尋日數起） */
+export function streakDays(now = new Date()) {
+  let d = save.days[dayKey(now)] ? now : addDays(now, -1);
+  let n = 0;
+  while (save.days[dayKey(d)]) { n += 1; d = addDays(d, -1); }
+  return n;
 }
 
 /* ---------- 等級與稱號 ---------- */
