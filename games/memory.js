@@ -95,7 +95,7 @@ export class MemoryView {
     return {
       mode: 'board',
       counter: `配對 <b>0/${level.pairs}</b>`,
-      intro: '🎁 寶物庫大門打開了！',
+      intro: '寶物庫大門打開了',
       prep: '開局寶箱會打開幾秒，記住入面嘅寶物！',
       manualClock: true,
     };
@@ -315,7 +315,7 @@ export class MemoryView {
     this.sched.after(2.0, () => this.hooks.finish({
       time, stars,
       lines: [
-        ['失誤', misses === 0 ? '0 ✨' : misses],
+        ['失誤', misses],
         ['最長連續配對', maxStreak],
         lv.traps ? ['被假寶箱咬', trapHits] : ['寶物', `${lv.pairs} 對`],
       ],

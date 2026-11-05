@@ -7,12 +7,12 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="腦力勇者" />
-  <meta name="theme-color" content="#0a1638" />
+  <meta name="theme-color" content="#0b0f1c" />
   <meta name="format-detection" content="telephone=no" />
   <title>腦力勇者 — 長者動腦冒險遊戲</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700;900&family=Cinzel:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="games.css" />
   <link rel="modulepreload" href="vendor/three/three.module.min.js" />
 </head>
@@ -25,7 +25,7 @@
   <!-- ================= 主選單 ================= -->
   <section class="layer menu active" id="menu" aria-label="冒險據點">
     <header class="topbar">
-      <a href="index.html" class="pill-btn" aria-label="返回 iSnow 主頁">‹ iSnow</a>
+      <a href="index.html" class="pill-btn" aria-label="返回 iSnow 主頁"><span data-icon="back"></span>iSnow</a>
       <div class="hero-chip" aria-live="polite">
         <div class="lv-ring"><small>Lv</small><b id="mLv">1</b></div>
         <div class="hero-meta">
@@ -33,7 +33,7 @@
           <div class="exp-bar" aria-hidden="true"><i id="mExp"></i></div>
         </div>
       </div>
-      <button class="round-btn mute-toggle" aria-label="關閉音效" aria-pressed="false">🔊</button>
+      <button class="round-btn mute-toggle" aria-label="關閉音效" aria-pressed="false"></button>
     </header>
 
     <div class="menu-body">
@@ -41,13 +41,14 @@
         <div class="logo">
           <p class="logo-kicker">BRAIN QUEST</p>
           <h1 class="logo-title">腦力勇者</h1>
+          <p class="logo-rule" aria-hidden="true"><i></i><b></b><i></i></p>
           <p class="logo-sub">每日一戰，鍛鍊專注力與記憶力</p>
         </div>
         <div class="menu-stage" id="menuStage" aria-hidden="true"></div>
       </div>
       <div class="menu-list" id="menuList">
         <div id="gameGrid"></div>
-        <button class="ghost-btn records-btn" data-action="records">📜 冒險紀錄</button>
+        <button class="ghost-btn records-btn" data-action="records"><span data-icon="scroll"></span>冒險紀錄</button>
       </div>
     </div>
   </section>
@@ -55,11 +56,11 @@
   <!-- ================= 遊戲中 ================= -->
   <section class="layer game" id="game" aria-label="遊戲中">
     <header class="hud">
-      <button class="pill-btn" data-action="retreat">‹ 撤退</button>
-      <div class="timer-pill" aria-label="計時"><span aria-hidden="true">⏱</span><span id="timer">0.0<small>秒</small></span></div>
+      <button class="pill-btn" data-action="retreat"><span data-icon="back"></span>撤退</button>
+      <div class="timer-pill" aria-label="計時"><span class="t-ico" data-icon="hourglass"></span><span id="timer">0.0<small>秒</small></span></div>
       <div class="hud-right">
         <div class="pill counter" id="counter">失誤 <b>0</b></div>
-        <button class="round-btn mute-toggle" aria-label="關閉音效" aria-pressed="false">🔊</button>
+        <button class="round-btn mute-toggle" aria-label="關閉音效" aria-pressed="false"></button>
       </div>
     </header>
 
@@ -83,11 +84,11 @@
       <div class="controls">
         <p class="toast" aria-live="polite"></p>
         <div class="dpad" role="group" aria-label="方向掣">
-          <button class="dpad-btn up" data-dir="up" aria-label="向上">▲</button>
-          <button class="dpad-btn left" data-dir="left" aria-label="向左">◀</button>
-          <span class="dpad-hub" aria-hidden="true">北<br>▲</span>
-          <button class="dpad-btn right" data-dir="right" aria-label="向右">▶</button>
-          <button class="dpad-btn down" data-dir="down" aria-label="向下">▼</button>
+          <button class="dpad-btn up" data-dir="up" aria-label="向上"><span data-icon="up"></span></button>
+          <button class="dpad-btn left" data-dir="left" aria-label="向左"><span data-icon="left"></span></button>
+          <span class="dpad-hub" aria-hidden="true"><span data-icon="north"></span>北</span>
+          <button class="dpad-btn right" data-dir="right" aria-label="向右"><span data-icon="right"></span></button>
+          <button class="dpad-btn down" data-dir="down" aria-label="向下"><span data-icon="down"></span></button>
         </div>
         <div class="tool-row" hidden></div>
       </div>
@@ -133,7 +134,7 @@
   <!-- ================= 冒險紀錄 ================= -->
   <div class="overlay" id="recordsOverlay" role="dialog" aria-modal="true" aria-labelledby="recTitle" hidden>
     <div class="panel records-panel">
-      <h2 class="panel-title" id="recTitle">📜 冒險紀錄</h2>
+      <h2 class="panel-title" id="recTitle"><span data-icon="scroll"></span>冒險紀錄</h2>
       <div class="rec-hero">
         <div class="lv-ring big"><small>Lv</small><b id="rLv">1</b></div>
         <div class="rec-hero-info">
@@ -169,12 +170,12 @@
       <div class="res-side">
         <ul class="res-stats" id="resStats"></ul>
         <p class="res-exp" id="resExp"></p>
-        <p class="res-unlock" id="resUnlock" hidden>🔓 魔王級已解鎖！</p>
+        <p class="res-unlock" id="resUnlock" hidden><span data-icon="unlock"></span>魔王級已解鎖</p>
         <div class="levelup" id="resLevelUp" hidden>
           <b>等級提升！</b><span id="resLevelDetail"></span>
         </div>
         <div class="res-actions">
-          <button class="cta" data-action="again">▶ 再戰一次</button>
+          <button class="cta" data-action="again"><span data-icon="play"></span>再戰一次</button>
           <button class="ghost-btn" data-action="change-diff">轉難度</button>
           <button class="ghost-btn" data-action="home">返回據點</button>
         </div>
@@ -197,6 +198,7 @@
   <!-- ================= 載入中／不支援 ================= -->
   <div class="boot" id="boot">
     <div class="boot-inner">
+      <div class="boot-kicker">BRAIN QUEST</div>
       <div class="boot-title">腦力勇者</div>
       <div class="boot-msg" id="bootMsg">冒險準備中……</div>
     </div>

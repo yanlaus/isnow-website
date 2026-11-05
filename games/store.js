@@ -51,15 +51,15 @@ export function addExp(amount) {
    metric: 'time' ＝ 越快越好；'score' ＝ 越高越好
    每個關卡：id / name / label（顯示規模）/ desc / exp / unlock（要先攻略邊關） */
 export const CATEGORIES = [
-  { id: 'focus',    name: '專注反應', icon: '⚡' },
-  { id: 'memory',   name: '記憶力',   icon: '🧠' },
-  { id: 'strategy', name: '策略思考', icon: '🗺️' },
-  { id: 'life',     name: '生活智慧', icon: '🏮' },
+  { id: 'focus',    name: '專注反應', icon: 'eye' },
+  { id: 'memory',   name: '記憶力',   icon: 'moon' },
+  { id: 'strategy', name: '策略思考', icon: 'compass' },
+  { id: 'life',     name: '生活智慧', icon: 'lantern' },
 ];
 
 export const GAMES = {
   schulte: {
-    title: '數觸之戰', icon: '⚔️', category: 'focus', metric: 'time',
+    title: '數觸之戰', icon: 'sword', category: 'focus', metric: 'time',
     tagline: '順序點數字，擊倒魔像',
     hint: '順序點擊 1 → 2 → 3 …，每點中一下就攻擊魔像！',
     levels: [
@@ -70,7 +70,7 @@ export const GAMES = {
     ],
   },
   whack: {
-    title: '打怪不打村民', icon: '🔨', category: 'focus', metric: 'score', unit: '分', scoreLabel: '得分',
+    title: '打怪不打村民', icon: 'hammer', category: 'focus', metric: 'score', unit: '分', scoreLabel: '得分',
     tagline: '魔物就打，村民就放過',
     hint: '60 秒內打走窗口出現嘅魔物。小心唔好打中村民！',
     levels: [
@@ -81,7 +81,7 @@ export const GAMES = {
     ],
   },
   memory: {
-    title: '寶箱記憶', icon: '🎁', category: 'memory', metric: 'time',
+    title: '寶箱記憶', icon: 'chest', category: 'memory', metric: 'time',
     tagline: '記住寶物，配對寶箱',
     hint: '開局寶箱會打開幾秒，記住入面嘅寶物，再逐對揭開相同嘅寶物。',
     levels: [
@@ -92,7 +92,7 @@ export const GAMES = {
     ],
   },
   simon: {
-    title: '咒文連鎖', icon: '🔮', category: 'memory', metric: 'score', unit: '連鎖', scoreLabel: '最長連鎖',
+    title: '咒文連鎖', icon: 'crystal', category: 'memory', metric: 'score', unit: '連鎖', scoreLabel: '最長連鎖',
     tagline: '記住水晶次序，放必殺技',
     hint: '水晶會按次序閃光，照住同一次序點返。連鎖越長，勇者就放必殺技！',
     levels: [
@@ -103,7 +103,7 @@ export const GAMES = {
     ],
   },
   maze: {
-    title: '地下迷宮', icon: '🏰', category: 'strategy', metric: 'time',
+    title: '地下迷宮', icon: 'tower', category: 'strategy', metric: 'time',
     tagline: '穿越迷宮，打開寶箱',
     hint: '用方向掣、滑動或點擊地面，帶勇者去寶箱。',
     levels: [
@@ -114,7 +114,7 @@ export const GAMES = {
     ],
   },
   stroke: {
-    title: '一筆畫地城', icon: '👣', category: 'strategy', metric: 'time',
+    title: '一筆畫地城', icon: 'steps', category: 'strategy', metric: 'time',
     tagline: '每格行一次，點亮全部符文',
     hint: '每塊地磚都要行過一次，唔可以重複。行錯可以退一步。',
     levels: [
@@ -125,7 +125,7 @@ export const GAMES = {
     ],
   },
   mahjong: {
-    title: '麻雀連連看', icon: '🀄', category: 'strategy', metric: 'time',
+    title: '麻雀連連看', icon: 'tile', category: 'strategy', metric: 'time',
     tagline: '連線消除相同麻雀牌',
     hint: '點兩隻相同嘅牌，連線轉彎唔多過兩次就可以消除。清晒全枱就勝利！',
     levels: [
@@ -136,7 +136,7 @@ export const GAMES = {
     ],
   },
   shop: {
-    title: '道具店算賬', icon: '💰', category: 'life', metric: 'time',
+    title: '道具店算賬', icon: 'scales', category: 'life', metric: 'time',
     tagline: '記住訂單，計啱找續',
     hint: '客人會講要買咩。記住佢，揀好貨品，再計啱價錢同找續。',
     levels: [
@@ -147,7 +147,7 @@ export const GAMES = {
     ],
   },
   idiom: {
-    title: '成語石碑', icon: '🏛️', category: 'life', metric: 'time',
+    title: '成語石碑', icon: 'stele', category: 'life', metric: 'time',
     tagline: '補全成語，解開封印',
     hint: '石碑上嘅成語缺咗一個字，喺四塊石入面揀返正確嘅字。',
     levels: [

@@ -53,7 +53,7 @@ export class WhackView {
     return {
       mode: 'board',
       counter: '得分 <b>0</b>',
-      intro: '🔨 魔物入侵村莊！',
+      intro: '魔物入侵村莊！',
       prep: '紫色紅眼＝魔物（要打）；戴帽笑臉＝村民（唔好打）',
       startMsg: '魔物出現就即刻點佢！',
       timeLimit: LIMIT,

@@ -3,6 +3,7 @@ import { THREE, Scheduler, clamp, shuffle } from './engine.js';
 import { gradientTexture, Sparks, makeGlow } from './fx.js';
 import { MJ_TYPES, mahjongTexture, ensureMahjongFonts } from './textures.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 
 const FOV = 36;
 const CAM_Z = 18;
@@ -82,12 +83,12 @@ export class MahjongView {
     return {
       mode: 'board',
       counter: `剩餘 <b>${level.rows * level.cols}</b>`,
-      intro: '🀄 開枱！麻雀連連看',
+      intro: '開枱！麻雀連連看',
       prep: '揀兩隻相同嘅牌，連線轉彎唔多過兩次就消除',
       startMsg: '點一隻牌，再點另一隻相同嘅牌',
       tools: [
-        { id: 'hint', label: '💡 提示 <b>3</b>' },
-        { id: 'shuffle', label: '🔀 洗牌 <b>+5秒</b>' },
+        { id: 'hint', label: `${icon('lamp')}提示 <b>3</b>` },
+        { id: 'shuffle', label: `${icon('shuffle')}洗牌 <b>+5秒</b>` },
       ],
     };
   }
@@ -360,7 +361,7 @@ export class MahjongView {
       this.hintsUsed += 1;
       this.clearHint();
       pair.forEach(i => { this.tiles[i].hint = true; });
-      this.hooks.setTool('hint', `💡 提示 <b>${this.hintsLeft}</b>`, this.hintsLeft <= 0);
+      this.hooks.setTool('hint', `${icon('lamp')}提示 <b>${this.hintsLeft}</b>`, this.hintsLeft <= 0);
       this.hooks.toast(`提示：留意發光嘅兩隻「${MJ_TYPES[this.grid[pair[0]]].name}」`);
     } else if (id === 'shuffle') {
       this.shuffles += 1;

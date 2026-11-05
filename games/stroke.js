@@ -3,6 +3,7 @@ import { THREE, shuffle } from './engine.js';
 import { makeGlow } from './fx.js';
 import { createChest } from './models.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 import { GridWorld, DIRS } from './grid-world.js';
 
 const DIR_WORD = { up: '上', down: '下', left: '左', right: '右' };
@@ -117,13 +118,13 @@ export class StrokeView extends GridWorld {
     return {
       mode: 'grid',
       counter: this.counterHtml(),
-      intro: '👣 進入符文大廳！',
+      intro: '進入符文大廳',
       prep: '每塊地磚都要行過一次，唔可以重複！',
       startMsg: '行過嘅地磚會亮起符文。行錯可以「退一步」',
       tools: [
-        { id: 'undo', label: '↶ 退一步' },
-        { id: 'hint', label: '💡 提示' },
-        { id: 'reset', label: '↺ 重來' },
+        { id: 'undo', label: `${icon('undo')}退一步` },
+        { id: 'hint', label: `${icon('lamp')}提示` },
+        { id: 'reset', label: `${icon('restart')}重來` },
       ],
     };
   }

@@ -5,6 +5,7 @@ import {
   starsTotal, starsMax, isBetter, fmtTime, fmtTimeHtml, fmtBest,
 } from './store.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 import { MenuView } from './menu.js';
 import { SchulteView } from './schulte.js';
 import { MazeView } from './maze.js';
@@ -130,7 +131,7 @@ async function start() {
     const mode = activeMode();
     const el = mode && mode.querySelector('.toast');
     if (!el) return;
-    el.textContent = text ? `▶ ${text}` : '';
+    el.textContent = text || '';
     if (text) restartAnim(el, 'flash');
   }
   function popup(text, x, y, cls = '') {
@@ -386,7 +387,7 @@ async function start() {
 
     const badge = $('#resBadge');
     badge.hidden = !isRecord;
-    badge.textContent = firstClear ? (isScore ? '🎖 首次挑戰！' : '🎖 首次攻略！') : '🏆 新紀錄！';
+    badge.innerHTML = firstClear ? `${icon('medal')}${isScore ? '首次挑戰' : '首次攻略'}` : `${icon('trophy')}新紀錄`;
     const compare = $('#resCompare');
     compare.hidden = firstClear;
     if (!firstClear) {
@@ -422,13 +423,13 @@ async function start() {
   function openDiff(game) {
     diffGame = game;
     const g = GAMES[game];
-    $('#diffTitle').textContent = `${g.icon} ${g.title}`;
+    $('#diffTitle').innerHTML = `${icon(g.icon)}${g.title}`;
     $('#diffSub').textContent = g.hint;
     $('#levelGrid').innerHTML = g.levels.map(l => {
       const unlocked = isUnlocked(game, l);
       const key = keyOf(game, l);
       const best = save.best[key];
-      const desc = !unlocked ? '🔒 攻略高級後解鎖' : l.desc;
+      const desc = !unlocked ? `${icon('lock')}攻略高級後解鎖` : l.desc;
       const bestHtml = best != null
         ? `<span>${fmtBest(game, best)}</span><span class="stars">${starText(save.stars[key] || 0)}</span>`
         : `<span class="none">${unlocked ? '未挑戰' : ''}</span>`;
@@ -461,13 +462,13 @@ async function start() {
     const rows = [];
     for (const game of availableGames()) {
       const g = GAMES[game];
-      rows.push(`<div class="rec-group">${g.icon} ${g.title}</div>`);
+      rows.push(`<div class="rec-group">${icon(g.icon)}${g.title}</div>`);
       for (const l of g.levels) {
         const key = keyOf(game, l);
         const best = save.best[key];
         const val = best != null
           ? `${fmtBest(game, best)}<span class="stars">${starText(save.stars[key] || 0)}</span>`
-          : `<span class="none">${isUnlocked(game, l) ? '未挑戰' : '🔒 未解鎖'}</span>`;
+          : `<span class="none">${isUnlocked(game, l) ? '未挑戰' : `${icon('lock')}未解鎖`}</span>`;
         rows.push(`<div class="rec-row"><span>${l.name}　${sizeLabel(l)}</span><span>${val}</span></div>`);
       }
     }
@@ -599,18 +600,18 @@ async function start() {
       const cards = games.map(id => {
         const g = GAMES[id];
         return `<button class="game-card cat-${g.category}" data-quest="${id}">
-            <span class="gc-ico" aria-hidden="true">${g.icon}</span>
+            <span class="gc-ico" aria-hidden="true">${icon(g.icon)}</span>
             <span class="gc-name">${g.title}</span>
             <span class="gc-tag">${g.tagline}</span>
             <span class="gc-stars">★ ${starsTotal(id)}/${starsMax(id)}</span>
           </button>`;
       }).join('');
-      return `<section class="cat"><h2 class="cat-head"><span aria-hidden="true">${c.icon}</span>${c.name}</h2><div class="cards">${cards}</div></section>`;
+      return `<section class="cat"><h2 class="cat-head">${icon(c.icon)}<span>${c.name}</span></h2><div class="cards">${cards}</div></section>`;
     }).join('');
   }
   function renderMute() {
     $$('.mute-toggle').forEach(b => {
-      b.textContent = save.muted ? '🔇' : '🔊';
+      b.innerHTML = icon(save.muted ? 'sound-off' : 'sound-on');
       b.setAttribute('aria-pressed', String(save.muted));
       b.setAttribute('aria-label', save.muted ? '開啟音效' : '關閉音效');
     });
@@ -654,6 +655,7 @@ async function start() {
   if (new URLSearchParams(location.search).has('debug')) window.__bh = { views, getView, engine, Timer };
 
   /* ---------- 啟動 ---------- */
+  $$('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon, el.className); });
   renderMute();
   showScreen('menu');
   await Promise.race([fontsReady, sleep(1200)]);

@@ -148,7 +148,7 @@ export class IdiomView {
     return {
       mode: 'panel',
       counter: `石碑 <b>1/${level.count}</b>`,
-      intro: '🏛️ 古廟石碑封印咗……',
+      intro: '古廟石碑封印咗……',
       prep: '石碑上嘅成語缺咗字，揀返正確嘅字',
     };
   }

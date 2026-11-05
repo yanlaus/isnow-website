@@ -4,6 +4,7 @@ import { gradientTexture, Sparks, blobShadow } from './fx.js';
 import { createVillager, createTorch } from './models.js';
 import { createItem } from './items.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 
 const CUSTOMERS = 5;
 const ITEMS = [
@@ -117,7 +118,7 @@ export class ShopView {
     return {
       mode: 'panel',
       counter: `客人 <b>1/${CUSTOMERS}</b>`,
-      intro: '💰 勇者道具店開門營業！',
+      intro: '勇者道具店開門營業',
       prep: '記住客人要買咩，然後揀貨同計數',
     };
   }
@@ -205,19 +206,19 @@ export class ShopView {
     const step = (n, text) => `<p class="step-title"><span class="step-no">${n}</span>${text}</p>`;
     let html = '';
     if (this.phase === 'arrive') {
-      html = `<div class="order-card"><p class="order-who">🧑 ${o.who}行緊入嚟……</p></div>`;
+      html = `<div class="order-card"><p class="order-who">${icon('person')}${o.who}行緊入嚟……</p></div>`;
     } else if (this.phase === 'memorize' || this.phase === 'pick') {
       const memo = this.phase === 'memorize';
       html += memo
         ? `<div class="order-card show">
-            <p class="order-who">🧑 ${o.who}：</p>
+            <p class="order-who">${icon('person')}${o.who}：</p>
             <p class="order-text">「${this.orderText()}」</p>
             <div class="order-bar"><i style="animation-duration:${sec}s"></i></div>
             <button class="ghost-btn order-btn" data-shop="hide">記住咗！</button>
           </div>`
         : `<div class="order-card row">
-            <p class="order-who">🧑 ${o.who}等緊你揀貨……</p>
-            <button class="ghost-btn order-btn mini" data-shop="repeat">🔁 再問</button>
+            <p class="order-who">${icon('person')}${o.who}等緊你揀貨……</p>
+            <button class="ghost-btn order-btn mini" data-shop="repeat">${icon('restart')}再問</button>
           </div>`;
       html += step('1', '揀貨：點貨品放入籃');
       html += `<div class="item-grid${memo ? ' locked' : ''}">${this.items.map(it =>
@@ -226,10 +227,10 @@ export class ShopView {
          </button>`).join('')}</div>`;
       const chips = Object.entries(this.basket).filter(([, q]) => q > 0).map(([id, q]) => {
         const it = ITEMS.find(x => x.id === id);
-        return `<button class="chip" data-remove="${id}">${it.icon} ${it.name} ×${q} <span aria-hidden="true">✕</span></button>`;
+        return `<button class="chip" data-remove="${id}">${it.icon} ${it.name} ×${q} ${icon('close', 'x')}</button>`;
       }).join('');
-      html += `<div class="basket"><span class="basket-label">🧺 籃：</span>${chips || '<span class="basket-empty">未有嘢</span>'}</div>`;
-      html += `<button class="cta deliver" data-shop="deliver" ${memo ? 'disabled' : ''}>✔ 交貨</button>`;
+      html += `<div class="basket"><span class="basket-label">${icon('basket')}籃：</span>${chips || '<span class="basket-empty">未有嘢</span>'}</div>`;
+      html += `<button class="cta deliver" data-shop="deliver" ${memo ? 'disabled' : ''}>${icon('check')}交貨</button>`;
     } else if (this.phase === 'total') {
       const detail = o.lines.map(l => `${l.item.icon}${l.item.name}（${l.item.price} 金幣）×${l.qty}`).join('　');
       html += `<div class="order-card"><p class="order-text small">${detail}</p></div>`;
@@ -240,7 +241,7 @@ export class ShopView {
       html += step('3', '要找幾多金幣？');
       html += `<div class="choices">${this.choices.map(v => `<button class="choice" data-choice="${v}">${v}<small>金幣</small></button>`).join('')}</div>`;
     } else if (this.phase === 'thanks') {
-      html = `<div class="order-card done"><p class="order-who">😊 ${o.who}：「多謝晒！下次再嚟！」</p></div>`;
+      html = `<div class="order-card done"><p class="order-who">${o.who}：「多謝晒！下次再嚟！」</p></div>`;
     }
     el.innerHTML = html;
   }
@@ -349,7 +350,7 @@ export class ShopView {
     // 星級：時間 + 失誤／再問嘅小扣分
     const eff = time + this.misses * 4 + this.repeats * 3;
     const stars = eff <= lv.stars[0] ? 3 : eff <= lv.stars[1] ? 2 : 1;
-    this.hooks.panel().innerHTML = '<div class="order-card done"><p class="order-who">🏮 今日營業完畢！</p></div>';
+    this.hooks.panel().innerHTML = `<div class="order-card done"><p class="order-who">${icon('lantern')}今日營業完畢</p></div>`;
     this.hooks.finish({
       time, stars,
       lines: [['招呼客人', `${CUSTOMERS} 位`], ['計錯／揀錯', this.misses], ['再問一次', this.repeats]],

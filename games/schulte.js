@@ -107,7 +107,7 @@ export class SchulteView {
   /* 魔像名牌、HP 條、「下一個」 */
   renderProgress() {
     const nn = document.getElementById('nextNum');
-    nn.textContent = this.next > this.total ? '✓' : String(this.next);
+    nn.textContent = this.next > this.total ? '完' : String(this.next);
     nn.classList.remove('pop'); void nn.offsetWidth; nn.classList.add('pop');
     const ratio = Math.max(0, (this.total - this.next + 1) / this.total);
     const hp = document.getElementById('hpFill');
@@ -313,7 +313,7 @@ export class SchulteView {
     const { misses, maxCombo, crits } = this;
     this.sched.after(1.5, () => this.hooks.finish({
       time, stars,
-      lines: [['失誤', misses === 0 ? '0 ✨' : misses], ['最高連擊', maxCombo], ['會心一擊', crits]],
+      lines: [['失誤', misses], ['最高連擊', maxCombo], ['會心一擊', crits]],
       bonus: misses === 0 ? 10 : 0,
       kicker: 'VICTORY',
       title: stars === 3 ? '完美勝利！' : stars === 2 ? '漂亮的勝利！' : '戰鬥勝利！',

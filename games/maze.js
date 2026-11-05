@@ -3,6 +3,7 @@ import { THREE, shuffle, pick } from './engine.js';
 import { gradientTexture, makeGlow } from './fx.js';
 import { createChest, createGem, createTorch } from './models.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 import { GridWorld, DIRS, N, E, S, W } from './grid-world.js';
 
 const WALL_H = 0.42;
@@ -89,8 +90,8 @@ export class MazeView extends GridWorld {
   hud(level) {
     return {
       mode: 'grid',
-      counter: `💎 <b>0/${this.gemTotal}</b>`,
-      intro: level.fog ? '🔥 點起火把，進入黑暗迷宮！' : '🏰 進入地下迷宮！',
+      counter: `${icon('gem')}<b>0/${this.gemTotal}</b>`,
+      intro: level.fog ? '點起火把，進入黑暗迷宮' : '進入地下迷宮',
       prep: level.fog ? '四周一片黑暗……寶箱在遠處發光！' : '找出通往寶箱的路！',
       startMsg: '用方向掣、滑動或點擊地面前進',
     };
@@ -276,7 +277,7 @@ export class MazeView extends GridWorld {
       buzz(20);
       this.tmp.set(this.hx, 0.6, this.hy);
       this.sparks.spawn(this.tmp, { count: 30, color: 0x9ff3ff, speed: 3, life: 0.7, gravity: 3 });
-      this.hooks.counter(`💎 <b>${this.collected}/${this.gemTotal}</b>`);
+      this.hooks.counter(`${icon('gem')}<b>${this.collected}/${this.gemTotal}</b>`);
       this.hooks.toast(this.collected === this.gemTotal ? '寶石全部到手！向寶箱進發！' : `得到了寶石！（${this.collected}/${this.gemTotal}）`);
     }
     if (j === this.goal) this.finish();

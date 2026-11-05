@@ -4,6 +4,7 @@ import { gradientTexture, Sparks, Embers, starField, makeGlow, blobShadow } from
 import { createHero, createGolem, createTorch } from './models.js';
 import { fmtTime } from './store.js';
 import { Sound, buzz } from './sound.js';
+import { icon } from './icons.js';
 
 const FOV = 38;
 const PITCH = THREE.MathUtils.degToRad(24);
@@ -96,13 +97,13 @@ export class SimonView {
     return {
       mode: 'board',
       counter: this.counterHtml(),
-      intro: level.reverse ? '🔮 倒轉咒文：要倒轉次序點返！' : '🔮 詠唱咒文，召喚必殺技！',
+      intro: level.reverse ? '倒轉咒文：要倒轉次序點返' : '詠唱咒文，召喚必殺技',
       prep: '水晶會按次序閃光同發聲，記住佢！',
     };
   }
 
   counterHtml() {
-    const hearts = '♥'.repeat(Math.max(0, this.lives)) + '♡'.repeat(Math.max(0, 2 - this.lives));
+    const hearts = icon('heart', 'fill').repeat(Math.max(0, this.lives)) + icon('heart').repeat(Math.max(0, 2 - this.lives));
     return `連鎖 <b>${this.best}</b><span class="lives">${hearts}</span>`;
   }
 
