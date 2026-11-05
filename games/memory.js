@@ -17,15 +17,21 @@ function floorTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
-  const cols = ['#3a2a4e', '#43305a'];
+  // 深色石板 + 金色嵌線（每四塊中間一粒菱形）
+  const cols = ['#302f37', '#37363f'];
   for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
     g.fillStyle = cols[(x + y) % 2];
     g.fillRect(x * 128, y * 128, 128, 128);
   }
-  g.strokeStyle = 'rgba(0,0,0,.45)';
+  g.strokeStyle = 'rgba(0,0,0,.5)';
   g.lineWidth = 6;
   g.strokeRect(0, 0, 256, 256);
   g.beginPath(); g.moveTo(128, 0); g.lineTo(128, 256); g.moveTo(0, 128); g.lineTo(256, 128); g.stroke();
+  g.strokeStyle = 'rgba(201,162,74,.38)';
+  g.lineWidth = 2;
+  g.beginPath(); g.moveTo(128, 4); g.lineTo(128, 252); g.moveTo(4, 128); g.lineTo(252, 128); g.stroke();
+  g.fillStyle = 'rgba(201,162,74,.55)';
+  g.beginPath(); g.moveTo(128, 116); g.lineTo(140, 128); g.lineTo(128, 140); g.lineTo(116, 128); g.closePath(); g.fill();
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -36,7 +42,7 @@ function floorTexture() {
 
 function coinPile(n = 14) {
   const g = new THREE.Group();
-  const m = new THREE.MeshStandardMaterial({ color: 0xf5c842, metalness: 0.75, roughness: 0.3, emissive: 0x3a2800, flatShading: true });
+  const m = new THREE.MeshStandardMaterial({ color: 0xd9b04a, metalness: 0.75, roughness: 0.3, emissive: 0x2a1c00, flatShading: true });
   const geo = new THREE.CylinderGeometry(0.12, 0.12, 0.03, 10);
   for (let i = 0; i < n; i++) {
     const c = new THREE.Mesh(geo, m);
@@ -53,10 +59,10 @@ export class MemoryView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#2a1a3a', '#170e26', '#08050f']);
+    this.scene.background = gradientTexture(['#141a36', '#0c1026', '#06070f']);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
-    this.scene.add(new THREE.HemisphereLight(0xd8d0ff, 0x2a1a30, 1.3));
+    this.scene.add(new THREE.HemisphereLight(0xc8cce8, 0x221a1c, 1.3));
     const key = new THREE.DirectionalLight(0xfff0d8, 2.3);
     key.position.set(-4, 9, 7);
     this.scene.add(key);

@@ -692,9 +692,10 @@ a { color: inherit; text-decoration: none; }
   outline-color: rgba(201, 162, 74, .16);
 }
 .item-card:active { transform: translateY(1px); border-color: var(--gold); background: var(--window-hi); }
-.ic-emoji, .ic-img { grid-row: 1 / span 2; }
-.ic-emoji { font-size: 1.9rem; line-height: 1; }
-.ic-img { width: 48px; height: 48px; object-fit: contain; }
+.item-card .ic-img { grid-row: 1 / span 2; }
+.ic-img { width: 48px; height: 48px; object-fit: contain; flex: none; }
+.ic-img.sm { width: 1.35em; height: 1.35em; margin: -.2em 0; }
+.order-item { display: inline-flex; align-items: center; gap: 2px; margin: 0 .3em; white-space: nowrap; vertical-align: middle; }
 .ic-name { font-size: 1.05rem; font-weight: 900; line-height: 1.2; white-space: nowrap; color: var(--text); }
 .ic-price { font-size: .85rem; font-weight: 700; line-height: 1.2; color: var(--gold); white-space: nowrap; }
 .basket {
@@ -1135,8 +1136,7 @@ a { color: inherit; text-decoration: none; }
 /* 矮畫面：面板內容壓細 */
 @media (max-height: 700px) {
   .item-card { min-height: 58px; padding: 4px; }
-  .ic-emoji { font-size: 1.6rem; }
-  .ic-img { width: 40px; height: 40px; }
+  .item-card .ic-img { width: 40px; height: 40px; }
   .order-text { font-size: 1.15rem; }
   .choice { min-height: 62px; font-size: 1.7rem; }
   .stone-btn { min-height: 76px; font-size: 2.5rem; }

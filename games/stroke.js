@@ -7,8 +7,8 @@ import { icon } from './icons.js';
 import { GridWorld, DIRS } from './grid-world.js';
 
 const DIR_WORD = { up: '上', down: '下', left: '左', right: '右' };
-const FLOOR_A = new THREE.Color(0x3b3366);
-const FLOOR_B = new THREE.Color(0x433a72);
+const FLOOR_A = new THREE.Color(0x3e3d48);
+const FLOOR_B = new THREE.Color(0x474652);
 const LIT = new THREE.Color(0xc9962c);
 const LIT_HEAD = new THREE.Color(0xffd56a);
 const PIT = new THREE.Color(0x0c0a16);
@@ -105,7 +105,7 @@ function generate(n, holes) {
 
 export class StrokeView extends GridWorld {
   constructor(hooks) {
-    super(hooks, { bg: ['#1c1640', '#110d28', '#06050f'] });
+    super(hooks, { bg: ['#141a38', '#0c1026', '#05060f'] });
     this.alwaysFull = true;
     this.wallH = 0.3;
     this.mtx = new THREE.Matrix4();
@@ -145,7 +145,7 @@ export class StrokeView extends GridWorld {
     this.parts = [];
     const add = o => { this.world.add(o); this.parts.push(o); return o; };
 
-    const base = new THREE.Mesh(new THREE.PlaneGeometry(n + 1.2, n + 1.2), new THREE.MeshLambertMaterial({ color: 0x120e24 }));
+    const base = new THREE.Mesh(new THREE.PlaneGeometry(n + 1.2, n + 1.2), new THREE.MeshLambertMaterial({ color: 0x121218 }));
     base.rotation.x = -Math.PI / 2;
     base.position.set((n - 1) / 2, -0.01, (n - 1) / 2);
     add(base);
@@ -173,7 +173,7 @@ export class StrokeView extends GridWorld {
     this.segs.count = 0;
 
     // 石柱
-    const rockMat = new THREE.MeshStandardMaterial({ color: 0x8a8296, roughness: 0.95, flatShading: true });
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x6a6670, roughness: 0.95, flatShading: true });
     for (let i = 0; i < n * n; i++) {
       if (!blocked[i]) continue;
       const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.36), rockMat);
@@ -183,7 +183,7 @@ export class StrokeView extends GridWorld {
       add(rock);
     }
     // 外框
-    const frameMat = new THREE.MeshLambertMaterial({ color: 0xe0cfa6 });
+    const frameMat = new THREE.MeshLambertMaterial({ color: 0xc2a57a });
     const L = n + 0.3, h = 0.3, t = 0.15, c = (n - 1) / 2;
     [[c, -0.575, L, t], [c, n - 0.425, L, t], [-0.575, c, t, L], [n - 0.425, c, t, L]].forEach(([x, z, w, d]) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
@@ -191,7 +191,7 @@ export class StrokeView extends GridWorld {
       add(m);
     });
     // 起點光環
-    this.startGlow = add(makeGlow(0x7dffa8, 1.4, 0.5));
+    this.startGlow = add(makeGlow(0x6fd39a, 1.4, 0.5));
     this.startGlow.position.set(this.start % n, 0.15, Math.floor(this.start / n));
     this.hintGlow = add(makeGlow(0x6fe3ff, 1.5, 0));
 

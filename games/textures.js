@@ -7,16 +7,17 @@ export function numberTexture(n) {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
-  const fs = n >= 10 ? 140 : 170;
-  g.font = `900 ${fs}px Montserrat, "Noto Sans TC", "PingFang HK", system-ui, sans-serif`;
+  const fs = n >= 10 ? 138 : 172;
+  // 象牙色 Cinzel 刻字 + 深色描邊（石磚上清楚易讀）
+  g.font = `700 ${fs}px Cinzel, "Noto Serif TC", Georgia, serif`;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.lineJoin = 'round';
-  g.lineWidth = 20;
-  g.strokeStyle = 'rgba(5, 12, 30, .92)';
-  g.strokeText(String(n), 128, 138);
-  g.fillStyle = '#ffffff';
-  g.fillText(String(n), 128, 138);
+  g.lineWidth = 18;
+  g.strokeStyle = 'rgba(8, 7, 6, .9)';
+  g.strokeText(String(n), 128, 134);
+  g.fillStyle = '#f4ead2';
+  g.fillText(String(n), 128, 134);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;

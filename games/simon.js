@@ -11,19 +11,36 @@ const PITCH = THREE.MathUtils.degToRad(24);
 const MAX_CHAIN = 20;
 const ULT_AT = [5, 8, 11, 14, 17, 20];
 const ULT_NAMES = ['流星斬', '雷光劍', '天空斬', '極光爆裂', '星河一閃', '勇者之光'];
+/* 寶石：顏色之外，輪廓都唔同（色弱都分得出） */
+const lathe = (pts, seg) => {
+  const g = new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+  g.computeVertexNormals();
+  return g;
+};
+function emeraldCut() {
+  // 長方階梯切割（八角形板）
+  const w = 0.24, h = 0.32, c = 0.08;
+  const sh = new THREE.Shape();
+  sh.moveTo(-w + c, -h);
+  sh.lineTo(w - c, -h); sh.lineTo(w, -h + c); sh.lineTo(w, h - c); sh.lineTo(w - c, h);
+  sh.lineTo(-w + c, h); sh.lineTo(-w, h - c); sh.lineTo(-w, -h + c); sh.lineTo(-w + c, -h);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.06, bevelSegments: 1 });
+  g.translate(0, 0, -0.06);
+  return g;
+}
 const CRYSTALS = [
-  { color: 0xff4d5e, geo: () => new THREE.OctahedronGeometry(0.34) },
-  { color: 0x4da6ff, geo: () => new THREE.ConeGeometry(0.34, 0.62, 3) },
-  { color: 0xffd34d, geo: () => new THREE.IcosahedronGeometry(0.34) },
-  { color: 0x4dff88, geo: () => new THREE.BoxGeometry(0.46, 0.46, 0.46) },
-  { color: 0xc06bff, geo: () => new THREE.DodecahedronGeometry(0.34) },
-  { color: 0x8ff7ff, geo: () => new THREE.CylinderGeometry(0.28, 0.28, 0.56, 6) },
+  { name: '紅寶石', color: 0xc8243c, geo: () => { const g = new THREE.OctahedronGeometry(0.36); g.scale(1, 1.2, 1); return g; } },
+  { name: '藍寶石', color: 0x2a5fd0, geo: () => new THREE.ConeGeometry(0.34, 0.7, 3) },
+  { name: '黃玉', color: 0xe0a826, geo: () => new THREE.DodecahedronGeometry(0.34) },
+  { name: '祖母綠', color: 0x17a063, geo: emeraldCut },
+  { name: '紫晶', color: 0x8a4cc8, geo: () => lathe([[0, -0.4], [0.22, -0.2], [0.22, 0.2], [0, 0.46]], 6) },
+  { name: '鑽石', color: 0xd8ecff, geo: () => lathe([[0, -0.36], [0.4, 0.06], [0.4, 0.1], [0.24, 0.26], [0, 0.26]], 8) },
 ];
 const GOLEMS = [
-  { rock: 0x6f8a62, crystal: 0x7dffa8 },
-  { rock: 0x7d97b8, crystal: 0x6fe3ff },
-  { rock: 0x4a3a36, crystal: 0xff8a2a },
-  { rock: 0x2c2440, crystal: 0xd65cff, boss: true },
+  { rock: 0x5c6656, crystal: 0x6fd39a },
+  { rock: 0x6a7a92, crystal: 0x7fd0f0 },
+  { rock: 0x3e3230, crystal: 0xff7a2a },
+  { rock: 0x241e30, crystal: 0xb05cff, boss: true },
 ];
 
 export class SimonView {
@@ -31,7 +48,8 @@ export class SimonView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#1d1450', '#100b2c', '#05050f']);
+    this.scene.background = gradientTexture(['#121a3c', '#0b1028', '#05060f']);
+    this.scene.fog = new THREE.Fog(0x0b1028, 16, 46);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 300);
 
     this.scene.add(new THREE.HemisphereLight(0xc8d6ff, 0x2a1d3d, 1.4));
@@ -40,16 +58,18 @@ export class SimonView {
     this.scene.add(key);
     this.flashLight = new THREE.PointLight(0xffffff, 0, 6, 2);
     this.scene.add(this.flashLight);
-    this.scene.add(starField(500, 90));
+    const stars = starField(500, 90);
+    stars.material.fog = false;
+    this.scene.add(stars);
 
     // 祭壇地台
     const altar = new THREE.Mesh(
       new THREE.CylinderGeometry(4.2, 4.6, 0.4, 16),
-      new THREE.MeshStandardMaterial({ color: 0x3a3450, roughness: 0.95, flatShading: true }),
+      new THREE.MeshStandardMaterial({ color: 0x34323e, roughness: 0.95, flatShading: true }),
     );
     altar.position.set(0, -0.2, -0.6);
     this.scene.add(altar);
-    this.ringMat = new THREE.MeshBasicMaterial({ color: 0x9a7bff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    this.ringMat = new THREE.MeshBasicMaterial({ color: 0xc9a24a, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.75, 64), this.ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(0, 0.01, -0.6);
@@ -77,11 +97,13 @@ export class SimonView {
     this.pillar.position.copy(this.golemBase).setY(6);
     this.scene.add(this.pillar);
 
+    this.stoneMat = new THREE.MeshStandardMaterial({ color: 0x57535f, roughness: 0.9, flatShading: true });
+    this.goldMat = new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 0.75, roughness: 0.3 });
     this.crystalGroup = new THREE.Group();
     this.scene.add(this.crystalGroup);
     this.crystals = [];
     this.sparks = new Sparks(this.scene, { cap: 700, size: 0.4 });
-    this.embers = new Embers(this.scene, { count: 50, box: [14, 8, 8], center: [0, 2, -2], color: 0xb48cff, size: 0.12, speed: 0.4 });
+    this.embers = new Embers(this.scene, { count: 50, box: [14, 8, 8], center: [0, 2, -2], color: 0xe8c98a, size: 0.1, speed: 0.4 });
 
     this.v = new THREE.Vector3();
     this.v2 = new THREE.Vector3();
@@ -113,18 +135,28 @@ export class SimonView {
     this.crystals.forEach(c => this.crystalGroup.remove(c.group));
     this.crystals = CRYSTALS.slice(0, level.crystals).map((spec, idx) => {
       const group = new THREE.Group();
-      const ped = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.32, 0.4, 0.55, 8),
-        new THREE.MeshStandardMaterial({ color: 0x6c6478, roughness: 0.9, flatShading: true }),
-      );
-      ped.position.y = 0.275;
+      // 雕石底座 + 金邊 + 一圈符文光
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.5, 8), this.stoneMat);
+      ped.position.y = 0.3;
       group.add(ped);
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.08, 8),
-        new THREE.MeshStandardMaterial({ color: spec.color, roughness: 0.5, emissive: spec.color, emissiveIntensity: 0.25 }));
-      cap.position.y = 0.59;
-      group.add(cap);
+      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.5, 0.1, 8), this.stoneMat);
+      foot.position.y = 0.05;
+      group.add(foot);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.36, 0.1, 8), this.stoneMat);
+      top.position.y = 0.6;
+      group.add(top);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.022, 4, 8), this.goldMat);
+      rim.rotation.x = Math.PI / 2;
+      rim.rotation.z = Math.PI / 8;
+      rim.position.y = 0.655;
+      group.add(rim);
+      const rune = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.3, 24),
+        new THREE.MeshBasicMaterial({ color: spec.color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+      rune.rotation.x = -Math.PI / 2;
+      rune.position.y = 0.657;
+      group.add(rune);
       group.add(blobShadow(1.1, 0.4));
-      const mat = new THREE.MeshStandardMaterial({ color: spec.color, emissive: spec.color, emissiveIntensity: 0.35, roughness: 0.2, metalness: 0.15, flatShading: true });
+      const mat = new THREE.MeshStandardMaterial({ color: spec.color, emissive: spec.color, emissiveIntensity: 0.3, roughness: 0.12, metalness: 0.2, flatShading: true });
       const mesh = new THREE.Mesh(spec.geo(), mat);
       mesh.position.y = 1.05;
       group.add(mesh);
@@ -132,7 +164,7 @@ export class SimonView {
       glow.position.y = 1.05;
       group.add(glow);
       this.crystalGroup.add(group);
-      return { idx, group, mesh, mat, glow, color: spec.color, flash: 0, hold: 0, shake: 0, seed: Math.random() * 6 };
+      return { idx, group, mesh, mat, glow, rune: rune.material, color: spec.color, flash: 0, hold: 0, shake: 0, seed: Math.random() * 6 };
     });
     this.seq = [];
     this.best = 0;
@@ -380,6 +412,7 @@ export class SimonView {
       c.mat.emissiveIntensity = 0.35 + f * 2.2;
       c.glow.position.y = c.mesh.position.y;
       c.glow.material.opacity = 0.3 + f * 0.7;
+      c.rune.opacity = 0.45 + f * 0.55;
       c.glow.scale.setScalar(1.3 + f * 1.8);
       c.shake = Math.max(0, c.shake - dt);
       c.mesh.position.x = c.shake > 0 ? Math.sin(t * 70) * 0.09 * (c.shake / 0.45) : 0;

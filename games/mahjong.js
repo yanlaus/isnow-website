@@ -36,7 +36,7 @@ export class MahjongView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#3a2414', '#24160c', '#120a05']);
+    this.scene.background = gradientTexture(['#24170e', '#170e08', '#0a0604']);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
     this.camera.position.set(0, 0, CAM_Z);
 
@@ -48,10 +48,10 @@ export class MahjongView {
     this.board = new THREE.Group();
     this.scene.add(this.board);
     // 綠色枱布 + 木框
-    this.felt = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshLambertMaterial({ color: 0x1f6b45 }));
+    this.felt = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshLambertMaterial({ color: 0x175238 }));
     this.felt.position.z = -0.42;
     this.board.add(this.felt);
-    this.frameMat = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.6 });
+    this.frameMat = new THREE.MeshStandardMaterial({ color: 0x5a3418, roughness: 0.55 });
     this.frame = [0, 1, 2, 3].map(() => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.4), this.frameMat);
       this.board.add(m);
@@ -65,7 +65,7 @@ export class MahjongView {
     this.backGeo = new THREE.ExtrudeGeometry(roundedRect(TW, TH, 0.1), { depth: 0.1, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 5 });
     this.backGeo.translate(0, 0, -0.33);
     this.faceGeo = new THREE.PlaneGeometry(TW * 0.92, TH * 0.92);
-    this.backMat = new THREE.MeshStandardMaterial({ color: 0x1f8a52, roughness: 0.4 });
+    this.backMat = new THREE.MeshStandardMaterial({ color: 0x1d6e48, roughness: 0.4 });
 
     this.lineGroup = new THREE.Group();
     this.board.add(this.lineGroup);

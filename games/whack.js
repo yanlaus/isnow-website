@@ -1,6 +1,6 @@
 /* 打怪不打村民：60 秒內打窗口嘅魔物，唔好打中村民（抑制控制） */
 import { THREE, Scheduler, centerOnRect, fitCameraDistance, pickNearest, toScreen, pick } from './engine.js';
-import { gradientTexture, Sparks } from './fx.js';
+import { gradientTexture, Sparks, starField, makeGlow } from './fx.js';
 import { createVillager, createMonster } from './models.js';
 import { Sound, buzz } from './sound.js';
 
@@ -9,10 +9,88 @@ const SX = 1.8, SY = 1.8;          // 窗口間距
 const WW = 1.24, WH = 1.3;         // 窗口開口
 const LIMIT = 60;
 const UP_T = 0.18;
+const CHAR = 1.18;                 // 角色喺窗口入面嘅大小
 const SHIRTS = [0x6b5a3a, 0x4f5f3a, 0x6a3a2e, 0x3f4a5e, 0x7a6a4a, 0x5a4a5e];
 const HATS = [0x3a2a1c, 0x4a3a2a, 0x2f3a2a, 0x5a4636, 0x2e2a3a];
 
 const lerp = (a, b, k) => a + (b - a) * k;
+
+/* 窗內暖燈：中間亮琥珀、四邊暗（角色喺前面成剪影） */
+function windowGlowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(32, 26, 4, 32, 32, 46);
+  grd.addColorStop(0, '#e0a25a');
+  grd.addColorStop(0.55, '#8a5428');
+  grd.addColorStop(1, '#2a160c');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* 遠景：夜色中嘅屋頂剪影，零星窗口有燈 */
+function createSkyline() {
+  const g = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({ color: 0x161a2c, roughness: 1, flatShading: true });
+  const roofM = new THREE.MeshStandardMaterial({ color: 0x10131f, roughness: 1, flatShading: true });
+  const lit = new THREE.MeshBasicMaterial({ color: 0xd9954a });
+  const xs = [-13, -10.2, -7.6, -4.6, -1.4, 1.8, 4.8, 7.8, 10.6, 13.4];
+  xs.forEach((x, k) => {
+    const w = 2.2 + (k % 3) * 0.5, h = 2.2 + ((k * 7) % 5) * 0.55, z = -5 - (k % 2) * 2.2;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1.6), body);
+    b.position.set(x, h / 2 - 3.2, z);
+    g.add(b);
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, w + 0.2, 3, 1), roofM);
+    r.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+    r.scale.set(1, 1, 0.9);
+    r.position.set(x, h - 3.2 + 0.32, z);
+    g.add(r);
+    if (k % 2 === 0 || k === 5) {
+      const wnd = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.42), lit);
+      wnd.position.set(x + ((k % 3) - 1) * 0.5, h * 0.62 - 3.2, z + 0.81);
+      g.add(wnd);
+    }
+  });
+  // 遠方鐘樓
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(1.4, 7, 1.4), body);
+  tower.position.set(-8.6, 0.3, -9);
+  g.add(tower);
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(1.15, 2.6, 4), roofM);
+  spire.position.set(-8.6, 5.1, -9);
+  spire.rotation.y = Math.PI / 4;
+  g.add(spire);
+  const clock = new THREE.Mesh(new THREE.CircleGeometry(0.36, 16), lit);
+  clock.position.set(-8.6, 2.6, -8.29);
+  g.add(clock);
+  return g;
+}
+
+/* 牆上掛燈 */
+function createWallLamp() {
+  const g = new THREE.Group();
+  const iron = new THREE.MeshStandardMaterial({ color: 0x1c1a20, metalness: 0.6, roughness: 0.5 });
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.5), iron);
+  arm.position.set(0, 0.32, 0.25);
+  g.add(arm);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.16, 4), iron);
+  cap.rotation.y = Math.PI / 4;
+  cap.position.set(0, 0.24, 0.5);
+  g.add(cap);
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.26, 0.2), new THREE.MeshBasicMaterial({ color: 0xffc77a }));
+  glass.position.set(0, 0.04, 0.5);
+  g.add(glass);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.04, 0.24), iron);
+  base.position.set(0, -0.11, 0.5);
+  g.add(base);
+  const glow = makeGlow(0xffa94d, 1.5, 0.75);
+  glow.position.set(0, 0.04, 0.56);
+  g.add(glow);
+  return g;
+}
 
 /* 複製材質並加上窗台裁切面（角色由窗台下面升起） */
 function clipModel(group, plane) {
@@ -29,13 +107,23 @@ export class WhackView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#2b2a6b', '#7a4a8a', '#e88a5a', '#f6c37a']);
+    this.scene.background = gradientTexture(['#060918', '#0d1430', '#1c2146', '#3a2f4e']);
+    this.scene.fog = new THREE.Fog(0x141a36, 16, 40);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
-    this.scene.add(new THREE.HemisphereLight(0xffe8d0, 0x4a3050, 1.5));
-    const sun = new THREE.DirectionalLight(0xffe0b8, 2.4);
-    sun.position.set(-6, 8, 10);
-    this.scene.add(sun);
+    // 月光（冷）+ 街燈（暖，由前面照住窗口）
+    this.scene.add(new THREE.HemisphereLight(0x8c9ccc, 0x1c1418, 1.15));
+    const moon = new THREE.DirectionalLight(0xb4c2ea, 1.1);
+    moon.position.set(-8, 10, 4);
+    this.scene.add(moon);
+    const lamp = new THREE.DirectionalLight(0xffc48a, 1.9);
+    lamp.position.set(3, 2, 10);
+    this.scene.add(lamp);
+    const stars = starField(320, 70, 0.25);
+    stars.material.fog = false;
+    this.scene.add(stars);
+    this.scene.add(createSkyline());
+    this.glowTex = windowGlowTexture();
 
     this.house = new THREE.Group();
     this.scene.add(this.house);
@@ -67,8 +155,8 @@ export class WhackView {
     const COLS = cols;
     const rows = n / COLS;
     const gw = COLS * SX, gh = rows * SY;
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf1e2c4, roughness: 0.95 });
-    const beamMat = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.8 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x9a8a72, roughness: 0.95 });
+    const beamMat = new THREE.MeshStandardMaterial({ color: 0x3a2618, roughness: 0.85 });
     const wall = new THREE.Mesh(new THREE.BoxGeometry(gw + 0.4, gh + 0.6, 0.3), wallMat);
     wall.position.set(0, 0, -0.15);
     this.house.add(wall);
@@ -84,23 +172,32 @@ export class WhackView {
       this.house.add(b);
     }
     // 屋頂
-    const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, gw + 0.9, 3, 1), new THREE.MeshStandardMaterial({ color: 0xb2452f, roughness: 0.7, flatShading: true }));
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, gw + 0.9, 3, 1), new THREE.MeshStandardMaterial({ color: 0x4e5870, roughness: 0.7, flatShading: true }));
     roof.rotation.z = Math.PI / 2;
     roof.rotation.x = -Math.PI / 2;   // 三角尖向上
     roof.position.set(0, gh / 2 + 0.3 + 0.42, -0.1);
     this.house.add(roof);
-    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x7a5a4a, roughness: 0.9 }));
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x55505c, roughness: 0.95, flatShading: true }));
     chimney.position.set(gw / 2 - 0.6, gh / 2 + 1.2, -0.3);
     this.house.add(chimney);
-    // 草地
-    const grass = new THREE.Mesh(new THREE.BoxGeometry(gw + 6, 0.3, 3), new THREE.MeshStandardMaterial({ color: 0x5aa04a, roughness: 1 }));
-    grass.position.set(0, -gh / 2 - 0.45, 0.6);
-    this.house.add(grass);
+    // 石板街
+    const street = new THREE.Mesh(new THREE.BoxGeometry(gw + 40, 0.3, 16), new THREE.MeshStandardMaterial({ color: 0x34323c, roughness: 1 }));
+    street.position.set(0, -gh / 2 - 0.45, 6.5);
+    this.house.add(street);
+    const step = new THREE.Mesh(new THREE.BoxGeometry(gw + 0.9, 0.18, 0.5), new THREE.MeshStandardMaterial({ color: 0x5a5560, roughness: 0.95 }));
+    step.position.set(0, -gh / 2 - 0.25, 0.1);
+    this.house.add(step);
+    // 牆角掛燈
+    for (const s of [-1, 1]) {
+      const l = createWallLamp();
+      l.position.set(s * (gw / 2 + 0.2), gh / 2 - 0.1, 0.1);
+      this.house.add(l);
+    }
     this.bounds = { w: gw + 1.0, top: gh / 2 + 1.25, bottom: -gh / 2 - 0.45 };
 
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x6b4426, roughness: 0.7 });
-    const shutterMat = new THREE.MeshStandardMaterial({ color: 0x3f7a5a, roughness: 0.7 });
-    const darkMat = new THREE.MeshBasicMaterial({ color: 0x241a2e });
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a2e1a, roughness: 0.75 });
+    const shutterMat = new THREE.MeshStandardMaterial({ color: 0x2f3d3a, roughness: 0.8 });
+    const darkMat = new THREE.MeshBasicMaterial({ map: this.glowTex });
     for (let i = 0; i < n; i++) {
       const cx = (i % COLS - (COLS - 1) / 2) * SX;
       const cy = ((rows - 1) / 2 - Math.floor(i / COLS)) * SY;
@@ -185,7 +282,7 @@ export class WhackView {
   }
 
   show(w, kind, stay) {
-    Object.entries(w.kinds).forEach(([k, g]) => { g.visible = k === kind; g.scale.set(1, 1, 1); g.rotation.set(0, 0, 0); });
+    Object.entries(w.kinds).forEach(([k, g]) => { g.visible = k === kind; g.scale.setScalar(CHAR); g.rotation.set(0, 0, 0); });
     w.cur = kind;
     w.phase = 'up';
     w.t = 0;
@@ -348,9 +445,9 @@ export class WhackView {
         if (k >= 1) { w.phase = 'idle'; g.visible = false; }
       } else if (w.phase === 'hit') {
         const k = Math.min(1, w.t / 0.35);
-        g.scale.set(1 + k * 0.4, 1 - k * 0.6, 1);
+        g.scale.set(CHAR * (1 + k * 0.4), CHAR * (1 - k * 0.6), CHAR);
         w.y = -1.25 * k * k;
-        if (k >= 1) { w.phase = 'idle'; g.visible = false; g.scale.set(1, 1, 1); }
+        if (k >= 1) { w.phase = 'idle'; g.visible = false; g.scale.setScalar(CHAR); }
       } else if (w.phase === 'bow') {
         g.rotation.x = Math.sin(Math.min(1, w.t / 0.6) * Math.PI) * 0.5;
         if (w.t >= 0.7) { g.rotation.x = 0; this.hide(w); }

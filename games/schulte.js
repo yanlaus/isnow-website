@@ -9,10 +9,10 @@ const FOV = 36;
 const CAM_Z = 16;
 const ARENA_Z = -4;
 const TILE = 0.8;          // 石磚邊長（未計倒角）
-const COLOR_IDLE = new THREE.Color(0x2a5fb8);
-const COLOR_DONE = new THREE.Color(0x0e1528);
-const GOLD = new THREE.Color(0xf5c842);
-const RED = new THREE.Color(0xff3b3b);
+const COLOR_IDLE = new THREE.Color(0x4a4a56);
+const COLOR_DONE = new THREE.Color(0x15151b);
+const GOLD = new THREE.Color(0xd9b25a);
+const RED = new THREE.Color(0xd04a5a);
 const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 function roundedRect(w, h, r) {
@@ -35,7 +35,8 @@ export class SchulteView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#241650', '#120d33', '#070816', '#04050c']);
+    this.scene.background = gradientTexture(['#121a3c', '#0b1028', '#070914', '#04050c']);
+    this.scene.fog = new THREE.Fog(0x0b1028, 22, 60);
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 300);
     this.camera.position.set(0, 0, CAM_Z);
 
@@ -43,12 +44,14 @@ export class SchulteView {
     const key = new THREE.DirectionalLight(0xfff1dc, 2.6);
     key.position.set(-5, 7, 10);
     this.scene.add(key);
-    const rim = new THREE.DirectionalLight(0x8a7bff, 1.4);
+    const rim = new THREE.DirectionalLight(0x8a9ad0, 1.2);
     rim.position.set(6, 3, -6);
     this.scene.add(rim);
 
-    this.scene.add(starField(500, 90));
-    this.embers = new Embers(this.scene, { count: 70, box: [26, 18, 6], center: [0, 0, -9], color: 0xff9a4d, size: 0.16, speed: 0.6 });
+    const stars = starField(500, 90);
+    stars.material.fog = false;
+    this.scene.add(stars);
+    this.embers = new Embers(this.scene, { count: 70, box: [26, 18, 6], center: [0, 0, -9], color: 0xffa860, size: 0.12, speed: 0.6 });
 
     // 擂台（魔像 + 平台 + 火把）
     this.arena = new THREE.Group();
@@ -56,7 +59,7 @@ export class SchulteView {
     this.scene.add(this.arena);
     const plat = new THREE.Mesh(
       new THREE.CylinderGeometry(2.4, 2.75, 0.55, 12),
-      new THREE.MeshStandardMaterial({ color: 0x3a3450, roughness: 0.95, flatShading: true }),
+      new THREE.MeshStandardMaterial({ color: 0x34323e, roughness: 0.95, flatShading: true }),
     );
     plat.position.y = -0.28;
     this.arena.add(plat);
@@ -146,7 +149,7 @@ export class SchulteView {
     const half = (this.n - 1) / 2;
     nums.forEach((v, idx) => {
       const r = Math.floor(idx / this.n), c = idx % this.n;
-      const mat = new THREE.MeshStandardMaterial({ color: COLOR_IDLE.clone(), roughness: 0.42, metalness: 0.25 });
+      const mat = new THREE.MeshStandardMaterial({ color: COLOR_IDLE.clone(), roughness: 0.78, metalness: 0.05 });
       const mesh = new THREE.Mesh(this.tileGeo, mat);
       const faceMat = new THREE.MeshBasicMaterial({ map: numberTexture(v), transparent: true, depthWrite: false });
       const face = new THREE.Mesh(this.faceGeo, faceMat);

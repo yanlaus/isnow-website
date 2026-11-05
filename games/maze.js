@@ -62,10 +62,10 @@ function bfs(cells, size, start) {
   return dist;
 }
 
-const FLOOR_A = new THREE.Color(0x2e2850);
-const FLOOR_B = new THREE.Color(0x372f5e);
-const FLOOR_VISIT = new THREE.Color(0x6b5a3a);
-const WALL_COL = new THREE.Color(0xe0cfa6);
+const FLOOR_A = new THREE.Color(0x3a3a44);   // 石板灰
+const FLOOR_B = new THREE.Color(0x43434e);
+const FLOOR_VISIT = new THREE.Color(0x7a6440);
+const WALL_COL = new THREE.Color(0xc2a57a);   // 砂岩
 
 export class MazeView extends GridWorld {
   constructor(hooks) {
@@ -120,7 +120,7 @@ export class MazeView extends GridWorld {
     // 地面底板（磚縫）
     const base = new THREE.Mesh(
       new THREE.PlaneGeometry(n + 2, n + 2),
-      new THREE.MeshLambertMaterial({ color: level.fog ? 0x020203 : 0x15122a }),
+      new THREE.MeshLambertMaterial({ color: level.fog ? 0x020203 : 0x16161c }),
     );
     base.rotation.x = -Math.PI / 2;
     base.position.set((n - 1) / 2, -0.01, (n - 1) / 2);
@@ -170,7 +170,7 @@ export class MazeView extends GridWorld {
       if (this.gems.length >= level.gems) break;
       if (used.has(i)) continue;
       used.add(i);
-      const g = createGem([0x5ee7ff, 0xff6bd6, 0x7dff9a, 0xffe066][this.gems.length % 4]);
+      const g = createGem([0x4aa8e8, 0xd04a6a, 0x3fbf86, 0xe8b84a][this.gems.length % 4]);
       g.group.position.set(i % n, 0, Math.floor(i / n));
       g.cell = i;
       this.world.add(g.group);

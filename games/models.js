@@ -280,8 +280,8 @@ export function createChest({ beacon: withBeacon = true, light: withLight = true
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
-  const wood = std(mimic ? 0x8a4f2a : 0x9a5f2c, { roughness: 0.8 });
-  const goldMat = std(0xf5c842, { metalness: 0.7, roughness: 0.3, emissive: 0x3a2a00 });
+  const wood = std(mimic ? 0x583420 : 0x62402a, { roughness: 0.8 });
+  const goldMat = std(0xc9a24a, { metalness: 0.75, roughness: 0.3, emissive: 0x241800 });
 
   const base = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.36, 0.44), wood);
   base.position.y = 0.18;

@@ -54,7 +54,7 @@ if (!webglAvailable()) {
 async function start() {
   const fontsReady = Promise.race([
     document.fonts ? Promise.all([
-      document.fonts.load('900 100px Montserrat'),
+      document.fonts.load('700 100px Cinzel', '0123456789'),
       document.fonts.load('900 40px "Noto Sans TC"'),
       document.fonts.load('900 40px "Noto Serif TC"', '一二三四五六七八九萬東南西北中發'),
     ]) : Promise.resolve(),

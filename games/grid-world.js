@@ -17,7 +17,7 @@ export const PITCH = THREE.MathUtils.degToRad(57);
 const MOVE_T = 0.15;
 
 export class GridWorld {
-  constructor(hooks, { bg = ['#1a1838', '#100e24', '#07060f'] } = {}) {
+  constructor(hooks, { bg = ['#121a3a', '#0b1026', '#05060f'] } = {}) {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
@@ -25,7 +25,7 @@ export class GridWorld {
     this.scene.background = this.bgNormal;
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
-    this.hemi = new THREE.HemisphereLight(0xc9d2ff, 0x2b2140, 1.5);
+    this.hemi = new THREE.HemisphereLight(0xc4cce4, 0x221c22, 1.5);
     this.scene.add(this.hemi);
     this.sun = new THREE.DirectionalLight(0xfff0d8, 2.2);
     this.sun.position.set(-4, 10, 6);

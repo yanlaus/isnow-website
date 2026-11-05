@@ -63,10 +63,10 @@ export const GAMES = {
     tagline: '順序點數字，擊倒魔像',
     hint: '順序點擊 1 → 2 → 3 …，每點中一下就攻擊魔像！',
     levels: [
-      { id: 'easy',   name: '初級', size: 3, desc: '苔岩魔像', enemyName: '苔岩魔像', rock: 0x6f8a62, crystal: 0x7dffa8, stars: [12, 20], exp: 20 },
-      { id: 'normal', name: '中級', size: 4, desc: '寒冰魔像', enemyName: '寒冰魔像', rock: 0x7d97b8, crystal: 0x6fe3ff, stars: [30, 50], exp: 35 },
-      { id: 'hard',   name: '高級', size: 5, desc: '熔岩魔像', enemyName: '熔岩魔像', rock: 0x4a3a36, crystal: 0xff8a2a, stars: [50, 80], exp: 55 },
-      { id: 'boss',   name: '魔王', size: 6, desc: '混沌魔王', enemyName: '混沌魔王', rock: 0x2c2440, crystal: 0xd65cff, stars: [85, 130], exp: 80, unlock: 'hard', boss: true },
+      { id: 'easy',   name: '初級', size: 3, desc: '苔岩魔像', enemyName: '苔岩魔像', rock: 0x5c6656, crystal: 0x6fd39a, stars: [12, 20], exp: 20 },
+      { id: 'normal', name: '中級', size: 4, desc: '寒冰魔像', enemyName: '寒冰魔像', rock: 0x6a7a92, crystal: 0x7fd0f0, stars: [30, 50], exp: 35 },
+      { id: 'hard',   name: '高級', size: 5, desc: '熔岩魔像', enemyName: '熔岩魔像', rock: 0x3e3230, crystal: 0xff7a2a, stars: [50, 80], exp: 55 },
+      { id: 'boss',   name: '魔王', size: 6, desc: '混沌魔王', enemyName: '混沌魔王', rock: 0x241e30, crystal: 0xb05cff, stars: [85, 130], exp: 80, unlock: 'hard', boss: true },
     ],
   },
   whack: {

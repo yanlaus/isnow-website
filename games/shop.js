@@ -1,5 +1,5 @@
 /* 道具店算賬：記住客人訂單 → 揀貨 → 計總數 → 找續（工作記憶 + 計算） */
-import { THREE, Scheduler, centerOnRect, fitCameraDistance, shuffle, randInt, pick } from './engine.js';
+import { THREE, Scheduler, centerOnRect, fitCameraDistance, shuffle, randInt, pick, snapshot } from './engine.js';
 import { gradientTexture, Sparks, blobShadow } from './fx.js';
 import { createVillager, createTorch } from './models.js';
 import { createItem } from './items.js';
@@ -8,14 +8,14 @@ import { icon } from './icons.js';
 
 const CUSTOMERS = 5;
 const ITEMS = [
-  { id: 'apple',  name: '蘋果', icon: '🍎', price: 1 },
-  { id: 'candle', name: '蠟燭', icon: '🕯️', price: 2 },
-  { id: 'bread',  name: '麵包', icon: '🍞', price: 3 },
-  { id: 'herb',   name: '藥草', icon: '🌿', price: 4 },
-  { id: 'fish',   name: '鮮魚', icon: '🐟', price: 5 },
-  { id: 'potion', name: '藥水', icon: '🧪', price: 6 },
-  { id: 'cheese', name: '芝士', icon: '🧀', price: 7 },
-  { id: 'key',    name: '鎖匙', icon: '🔑', price: 8 },
+  { id: 'apple',  name: '蘋果', price: 1 },
+  { id: 'candle', name: '蠟燭', price: 2 },
+  { id: 'bread',  name: '麵包', price: 3 },
+  { id: 'herb',   name: '藥草', price: 4 },
+  { id: 'fish',   name: '鮮魚', price: 5 },
+  { id: 'potion', name: '藥水', price: 6 },
+  { id: 'cheese', name: '芝士', price: 7 },
+  { id: 'key',    name: '鎖匙', price: 8 },
 ];
 const NOTES = [5, 10, 20, 50, 100];
 const NAMES = ['村長', '旅人', '鐵匠', '漁夫', '農婦', '吟遊詩人', '騎士', '魔法師'];
@@ -27,19 +27,34 @@ function signTexture() {
   c.width = 512;
   c.height = 160;
   const g = c.getContext('2d');
-  g.fillStyle = '#6b3f1f';
-  g.fillRect(0, 0, 512, 160);
-  g.strokeStyle = '#f5c842';
-  g.lineWidth = 10;
-  g.strokeRect(10, 10, 492, 140);
-  g.fillStyle = '#ffe08a';
-  g.font = '900 96px "Noto Sans TC", "PingFang HK", sans-serif';
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillText('勇者道具店', 256, 84);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  const draw = () => {
+    // 深色木牌、金色雙線、襯線金字
+    g.fillStyle = '#2a1a10';
+    g.fillRect(0, 0, 512, 160);
+    g.strokeStyle = '#c9a24a';
+    g.lineWidth = 6;
+    g.strokeRect(8, 8, 496, 144);
+    g.strokeStyle = 'rgba(201,162,74,.45)';
+    g.lineWidth = 2;
+    g.strokeRect(20, 20, 472, 120);
+    g.fillStyle = '#e6cf94';
+    g.font = '900 88px "Noto Serif TC", "Songti TC", serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('勇者道具店', 256, 84);
+    t.needsUpdate = true;
+  };
+  draw();
+  if (document.fonts) document.fonts.load('900 88px "Noto Serif TC"', '勇者道具店').then(draw).catch(() => {});
   return t;
+}
+
+/* 貨品圖示：3D 模型截圖（有快取）；截唔到就淨係顯示名 */
+function itemImg(id, cls = 'ic-img') {
+  const url = snapshot('item-' + id, () => createItem(id));
+  return url ? `<img class="${cls}" src="${url}" alt="">` : '';
 }
 
 /* 四個選項：正確答案 + 三個相近嘅錯誤答案 */
@@ -55,7 +70,7 @@ export class ShopView {
     this.hooks = hooks;
     this.sched = new Scheduler();
     this.scene = new THREE.Scene();
-    this.scene.background = gradientTexture(['#4a2c18', '#2e1a0e', '#160c06']);
+    this.scene.background = gradientTexture(['#2e1c10', '#1e120a', '#0e0805']);
     this.camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
 
     this.scene.add(new THREE.HemisphereLight(0xfff0d8, 0x3a2410, 1.6));
@@ -64,7 +79,7 @@ export class ShopView {
     this.scene.add(key);
 
     const wood = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, flatShading: true });
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(9, 4.4, 0.2), wood(0x7a4a28));
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(9, 4.4, 0.2), wood(0x5e3a22));
     wall.position.set(0, 1.9, -1.6);
     this.scene.add(wall);
     // 貨架 + 貨品
@@ -74,7 +89,7 @@ export class ShopView {
         const shelf = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 0.5), shelfMat);
         shelf.position.set(side * 2.7, y, -1.3);
         this.scene.add(shelf);
-        const kinds = [['potion', 'apple', 'bread'], ['apple', 'potion', 'potion'], ['bread', 'potion', 'apple']][row];
+        const kinds = [['potion', 'candle', 'bread'], ['apple', 'cheese', 'potion'], ['herb', 'potion', 'fish']][row];
         kinds.forEach((k, j) => {
           const it = createItem(k);
           it.scale.setScalar(0.85);
@@ -93,17 +108,17 @@ export class ShopView {
       return t;
     });
     // 櫃枱
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.0), wood(0x8a5430));
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.0), wood(0x6a4026));
     counter.position.set(0, 0.5, 1.1);
     this.scene.add(counter);
-    const top = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.12, 1.2), wood(0xb27a46));
+    const top = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.12, 1.2), wood(0x8a5a34));
     top.position.set(0, 1.06, 1.1);
     this.scene.add(top);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 8), new THREE.MeshLambertMaterial({ color: 0x3a2414 }));
     floor.rotation.x = -Math.PI / 2;
     this.scene.add(floor);
 
-    this.coinMat = new THREE.MeshStandardMaterial({ color: 0xf5c842, metalness: 0.75, roughness: 0.3, emissive: 0x3a2800 });
+    this.coinMat = new THREE.MeshStandardMaterial({ color: 0xd9b04a, metalness: 0.75, roughness: 0.3, emissive: 0x2a1c00 });
     this.coinGeo = new THREE.CylinderGeometry(0.13, 0.13, 0.04, 14);
     this.coins = [];
     this.customer = null;
@@ -196,7 +211,7 @@ export class ShopView {
 
   /* ---------- 面板 ---------- */
   orderText() {
-    return this.order.lines.map(l => `${l.item.icon} ${l.item.name} ×${l.qty}`).join('　');
+    return this.order.lines.map(l => `<span class="order-item">${itemImg(l.item.id, 'ic-img sm')}${l.item.name} ×${l.qty}</span>`).join('');
   }
 
   renderPanel(sec = 0) {
@@ -223,16 +238,16 @@ export class ShopView {
       html += step('1', '揀貨：點貨品放入籃');
       html += `<div class="item-grid${memo ? ' locked' : ''}">${this.items.map(it =>
         `<button class="item-card" data-item="${it.id}" ${memo ? 'disabled' : ''}>
-           <span class="ic-emoji">${it.icon}</span><span class="ic-name">${it.name}</span><span class="ic-price">${it.price} 金幣</span>
+           ${itemImg(it.id)}<span class="ic-name">${it.name}</span><span class="ic-price">${it.price} 金幣</span>
          </button>`).join('')}</div>`;
       const chips = Object.entries(this.basket).filter(([, q]) => q > 0).map(([id, q]) => {
         const it = ITEMS.find(x => x.id === id);
-        return `<button class="chip" data-remove="${id}">${it.icon} ${it.name} ×${q} ${icon('close', 'x')}</button>`;
+        return `<button class="chip" data-remove="${id}">${itemImg(id)}${it.name} ×${q} ${icon('close', 'x')}</button>`;
       }).join('');
       html += `<div class="basket"><span class="basket-label">${icon('basket')}籃：</span>${chips || '<span class="basket-empty">未有嘢</span>'}</div>`;
       html += `<button class="cta deliver" data-shop="deliver" ${memo ? 'disabled' : ''}>${icon('check')}交貨</button>`;
     } else if (this.phase === 'total') {
-      const detail = o.lines.map(l => `${l.item.icon}${l.item.name}（${l.item.price} 金幣）×${l.qty}`).join('　');
+      const detail = o.lines.map(l => `<span class="order-item">${itemImg(l.item.id, 'ic-img sm')}${l.item.name}（${l.item.price} 金幣）×${l.qty}</span>`).join('');
       html += `<div class="order-card"><p class="order-text small">${detail}</p></div>`;
       html += step('2', '一共幾多金幣？');
       html += `<div class="choices">${this.choices.map(v => `<button class="choice" data-choice="${v}">${v}<small>金幣</small></button>`).join('')}</div>`;
@@ -322,7 +337,7 @@ export class ShopView {
     this.hooks.toast(`交易完成！（${this.served}/${CUSTOMERS}）`);
     this.customer.group.getWorldPosition(this.v);
     this.v.y += 2.2;
-    this.sparks.spawn(this.v, { count: 30, color: 0xff8ab0, speed: 2.5, life: 0.8, gravity: -1 });
+    this.sparks.spawn(this.v, { count: 30, color: 0xe8c98a, speed: 2.5, life: 0.8, gravity: -1 });
     this.sched.after(1.0, () => { this.walk = { from: 0, to: -4.4, t: 0, dur: 0.9 }; });
     this.sched.after(1.9, () => this.nextCustomer());
   }
