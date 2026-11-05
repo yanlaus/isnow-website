@@ -2,7 +2,11 @@
 
 const STORE_KEY = 'brainHero.v1';
 
-const freshSave = () => ({ exp: 0, level: 1, plays: 0, best: {}, stars: {}, hist: {}, days: {}, muted: false });
+const START_EQUIP = { sword: 'sword0', shield: 'shield0', cape: 'cape0', helm: 'helm0' };
+const freshSave = () => ({
+  exp: 0, level: 1, plays: 0, best: {}, stars: {}, hist: {}, days: {}, muted: false,
+  gold: 0, owned: Object.values(START_EQUIP), equip: { ...START_EQUIP }, daily: null,
+});
 
 function loadSave() {
   try {
@@ -14,6 +18,8 @@ function loadSave() {
     s.stars = Object.assign({}, data.stars);
     s.hist = Object.assign({}, data.hist);
     s.days = Object.assign({}, data.days);
+    s.equip = Object.assign({ ...START_EQUIP }, data.equip);
+    s.owned = Array.from(new Set([...Object.values(START_EQUIP), ...(Array.isArray(data.owned) ? data.owned : [])]));
     return s;
   } catch (_) {
     return freshSave();
@@ -55,6 +61,8 @@ export function streakDays(now = new Date()) {
   while (save.days[dayKey(d)]) { n += 1; d = addDays(d, -1); }
   return n;
 }
+
+export function addGold(n) { save.gold = Math.max(0, (save.gold || 0) + n); }
 
 /* ---------- 等級與稱號 ---------- */
 export const expToNext = lv => 60 + lv * 40;

@@ -383,7 +383,7 @@ a { color: inherit; text-decoration: none; }
 .cat-memory   { --accent: #8667ad; --accent-hi: #c9b4e8; }
 .cat-strategy { --accent: #3f8a85; --accent-hi: #8fd0c9; }
 .cat-life     { --accent: #5d8a58; --accent-hi: #a8d29f; }
-.records-btn { width: 100%; margin-top: 18px; }
+.menu-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 
 /* ===== 遊戲中 HUD ===== */
 .hud {
@@ -1314,3 +1314,174 @@ body:not(.booting) .boot:not(.error) { opacity: 0; visibility: hidden; }
   pointer-events: auto;
 }
 .share-panel .stack .cta { text-decoration: none; }
+
+/* =========================================================
+   勇者成長：金幣、今日任務、印章簿、裝備屋
+   ========================================================= */
+.hero-sub { display: flex; align-items: center; gap: 8px; }
+.hero-sub .exp-bar { flex: 1; min-width: 24px; margin-top: 0; }
+.hero-gold { flex: none; display: inline-flex; align-items: center; gap: 3px; color: var(--gold); line-height: 1.1; }
+.hero-gold .ico { width: .95em; height: .95em; }
+.hero-gold b { font-family: var(--font-num); font-weight: 700; color: var(--gold-hi); font-size: .9rem; }
+
+.daily-card { margin-bottom: 18px; padding: 12px 14px 12px; border-radius: 6px; }
+.daily-head { display: flex; align-items: center; gap: 10px; }
+.dh-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  color: var(--gold-hi);
+}
+.dh-title .ico { color: var(--gold); }
+.dh-streak { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--dim); white-space: nowrap; }
+.dh-streak .ico { color: var(--gold); }
+.dh-streak b { font-family: var(--font-num); color: var(--gold-hi); font-size: 1.1em; }
+.daily-list { list-style: none; margin: 8px 0 6px; display: grid; gap: 6px; }
+.dq {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .28);
+  border: 1px solid rgba(201, 162, 74, .18);
+  pointer-events: auto;
+}
+.dq.link { cursor: pointer; border-color: var(--gold-faint); }
+.dq.link:active { background: var(--window-hi); }
+.dq-check { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gold-faint); color: var(--gold); }
+.dq-check .ico { width: 18px; height: 18px; }
+.dq-text { font-weight: 700; line-height: 1.35; }
+.dq-prog { font-family: var(--font-num); font-weight: 700; color: var(--dim); }
+.dq-reward { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font-num); font-weight: 700; color: var(--gold); white-space: nowrap; }
+.dq-reward .ico { width: 1em; height: 1em; }
+.dq.done { background: rgba(111, 174, 134, .1); border-color: rgba(111, 174, 134, .35); }
+.dq.done .dq-check { background: var(--jade); border-color: var(--jade); color: #0b1a12; }
+.dq.done .dq-text { color: var(--dim); text-decoration: line-through; text-decoration-color: rgba(179, 171, 156, .6); }
+.daily-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dq-bonus { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--dim); }
+.dq-bonus .ico { color: var(--gold); }
+.dq-bonus.got { color: var(--jade); }
+.daily-foot .ghost-btn { min-height: 48px; padding: 0 14px; }
+
+.game-card.featured { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(201, 162, 74, .35), 0 0 22px rgba(201, 162, 74, .28), 0 6px 18px rgba(0, 0, 0, .45); }
+.game-card.featured { padding-bottom: 34px; }
+.gc-feat {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: .78rem;
+  font-weight: 900;
+  color: #1a1206;
+  background: linear-gradient(180deg, #ecd9a4, #c9a24a);
+}
+
+.res-gold { display: inline-flex; align-items: center; gap: 2px; margin-left: 12px; color: var(--gold); }
+.res-gold b { margin-left: 2px; }
+.res-quest { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 2px; font-weight: 700; color: var(--jade); font-size: .92rem; line-height: 1.35; }
+.res-quest span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 中等高度直向（iPhone SE、細 iPad 視窗）：戰果再壓細，走勢線收埋 */
+@media (max-height: 700px) and (max-aspect-ratio: 5/4) {
+  .result-panel { padding: 14px 14px 14px; }
+  .res-kicker { display: none; }
+  .res-title { font-size: 1.75rem; }
+  .res-stars { font-size: 1.85rem; line-height: 1.1; }
+  .res-time b { font-size: 2rem; }
+  .res-note { margin: 2px 0; }
+  .res-trend { display: none !important; }
+  .res-stats { margin: 6px 0 4px; gap: 6px; }
+  .res-stats li { padding: 4px 2px; }
+  .levelup { margin-top: 6px; padding: 4px 8px; }
+  .res-actions { margin-top: 8px; gap: 8px; }
+  .res-actions .cta { min-height: 52px; }
+  .res-actions .ghost-btn { min-height: 48px; }
+}
+@media (max-height: 520px) and (min-aspect-ratio: 5/4) {
+  .res-trend { display: none !important; }
+  .res-stats li { padding: 3px 2px; }
+  .res-stats b { font-size: 1.1rem; }
+  .res-exp { line-height: 1.3; }
+  .levelup { margin-top: 4px; padding: 3px 8px; }
+}
+
+/* 印章簿 */
+.stamps-panel { max-width: 460px; }
+.stamps-panel .panel-sub b { font-family: var(--font-num); color: var(--gold-hi); }
+.stamp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0 10px; }
+.sg-head { text-align: center; font-weight: 700; color: var(--dim); font-size: .85rem; }
+.sg-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid rgba(201, 162, 74, .16);
+}
+.sg-day i { font-style: normal; font-family: var(--font-num); font-weight: 700; color: var(--dim); font-size: .9rem; }
+.sg-day.today { border-color: var(--gold); }
+.sg-day.future { opacity: .35; }
+.sg-day.stamped { background: radial-gradient(circle, rgba(200, 80, 95, .28), rgba(0, 0, 0, .3)); border-color: rgba(200, 80, 95, .55); }
+.sg-day.stamped i { position: absolute; top: 2px; left: 5px; font-size: .7rem; color: var(--text); }
+.sg-day .stamp { width: 62%; height: 62%; color: #e2737f; transform: rotate(-12deg); }
+.stamp-note { font-size: .9rem; color: var(--dim); margin-bottom: 12px; }
+
+/* 裝備屋 */
+.armory-panel { max-width: 560px; }
+.armory-top { display: flex; align-items: center; gap: 12px; text-align: left; }
+.armory-top .panel-title { justify-content: flex-start; }
+.armory-hero { width: 96px; height: 96px; flex: none; border-radius: 50%; background: radial-gradient(circle at 50% 40%, rgba(201, 162, 74, .25), rgba(0, 0, 0, .35) 70%); border: 1px solid var(--gold-line); }
+.armory-gold { display: flex; align-items: center; gap: 4px; margin-top: 2px; font-weight: 700; color: var(--dim); }
+.armory-gold .ico { color: var(--gold); }
+.armory-gold b { font-family: var(--font-num); font-size: 1.25rem; color: var(--gold-hi); }
+.armory-msg { min-height: 1.4em; font-weight: 700; color: var(--jade); font-size: .92rem; }
+.armory-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+.armory-tab {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 4px;
+  font-weight: 900;
+  color: var(--dim);
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid var(--gold-faint);
+}
+.armory-tab.on { color: #1a1206; background: linear-gradient(180deg, #ecd9a4, #c9a24a); border-color: var(--gold); }
+.armory-grid { display: grid; gap: 8px; margin-bottom: 12px; max-height: 46vh; overflow-y: auto; touch-action: pan-y; }
+.ar-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 4px;
+  text-align: left;
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid rgba(201, 162, 74, .2);
+}
+.ar-card.on { border-color: var(--jade); background: rgba(111, 174, 134, .1); }
+.ar-img { width: 60px; height: 60px; object-fit: contain; }
+.ar-info { display: grid; min-width: 0; }
+.ar-name { font-family: var(--font-serif); font-size: 1.08rem; font-weight: 900; color: var(--gold-hi); }
+.ar-desc { font-size: .85rem; color: var(--dim); }
+.ar-act { display: grid; justify-items: end; gap: 2px; }
+.ar-btn { min-height: 48px; padding: 0 12px; font-size: .95rem; white-space: nowrap; gap: 4px; }
+.ar-btn:disabled { opacity: .55; }
+.ar-hint { font-size: .78rem; color: var(--dim); white-space: nowrap; }
+.ar-state { display: inline-flex; align-items: center; gap: 4px; font-weight: 900; color: var(--jade); white-space: nowrap; }
+@media (max-height: 520px) and (min-aspect-ratio: 5/4) {
+  .armory-panel { max-width: 760px; }
+  .armory-grid { grid-template-columns: 1fr 1fr; max-height: 40vh; }
+  .armory-hero { width: 72px; height: 72px; }
+}

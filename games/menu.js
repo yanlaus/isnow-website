@@ -2,6 +2,7 @@
 import { THREE, centerOnRect, fitCameraDistance } from './engine.js';
 import { gradientTexture, starField, Embers, makeGlow } from './fx.js';
 import { createHero, createTorch } from './models.js';
+import { heroGear } from './gear.js';
 
 const FOV = 36;
 const flat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.95, flatShading: true, ...opts });
@@ -146,11 +147,8 @@ export class MenuView {
     this.flagBase = flagGeo.attributes.position.array.slice();
 
     // 勇者
-    this.hero = createHero();
-    this.hero.group.scale.setScalar(1.6);
-    this.hero.group.position.set(0, 0.04, 0.25);
-    this.hero.group.rotation.y = 0.35;
-    this.root.add(this.hero.group);
+    this.hero = createHero(heroGear());
+    this.placeHero();
 
     this.embers = new Embers(this.scene, { count: 40, box: [5, 3.5, 3], center: [-1, 2.2, -0.4], color: 0xffb060, size: 0.08, speed: 0.45 });
     this.motes = new Embers(this.scene, { count: 30, box: [10, 4, 6], center: [0, 2, -1], color: 0xe8d29a, size: 0.05, speed: 0.15 });
@@ -160,6 +158,19 @@ export class MenuView {
     this.dist = 14;
     this.target = new THREE.Vector3(0, 1.1, 0);
     this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  placeHero() {
+    this.hero.group.scale.setScalar(1.6);
+    this.hero.group.position.set(0, 0.04, 0.25);
+    this.hero.group.rotation.y = 0.35;
+    this.root.add(this.hero.group);
+  }
+
+  refreshHero(gear) {
+    this.root.remove(this.hero.group);
+    this.hero = createHero(gear);
+    this.placeHero();
   }
 
   resize(w, h) {

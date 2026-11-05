@@ -33,7 +33,10 @@
         <div class="lv-ring"><small>Lv</small><b id="mLv">1</b></div>
         <div class="hero-meta">
           <div class="hero-title" id="mTitle">見習冒險者</div>
-          <div class="exp-bar" aria-hidden="true"><i id="mExp"></i></div>
+          <div class="hero-sub">
+            <div class="exp-bar" aria-hidden="true"><i id="mExp"></i></div>
+            <span class="hero-gold" aria-label="金幣"><span data-icon="coin"></span><b id="mGold">0</b></span>
+          </div>
         </div>
       </div>
       <button class="round-btn mute-toggle" aria-label="關閉音效" aria-pressed="false"></button>
@@ -62,8 +65,12 @@
             <button class="ghost-btn tip-close" data-action="dismiss-install">知道了</button>
           </div>
         </div>
+        <section class="daily-card frame" id="dailyCard" aria-label="今日任務"></section>
         <div id="gameGrid"></div>
-        <button class="ghost-btn records-btn" data-action="records"><span data-icon="scroll"></span>冒險紀錄</button>
+        <div class="menu-actions">
+          <button class="ghost-btn" data-action="armory"><span data-icon="shield"></span>裝備屋</button>
+          <button class="ghost-btn" data-action="records"><span data-icon="scroll"></span>冒險紀錄</button>
+        </div>
       </div>
     </div>
   </section>
@@ -164,6 +171,34 @@
     </div>
   </div>
 
+  <!-- ================= 裝備屋 ================= -->
+  <div class="overlay" id="armoryOverlay" role="dialog" aria-modal="true" aria-labelledby="armoryTitle" hidden>
+    <div class="panel armory-panel">
+      <div class="armory-top">
+        <img class="armory-hero" id="armoryHero" alt="" />
+        <div>
+          <h2 class="panel-title" id="armoryTitle"><span data-icon="shield"></span>裝備屋</h2>
+          <p class="armory-gold">持有金幣 <span data-icon="coin"></span><b id="aGold">0</b></p>
+          <p class="armory-msg" id="armoryMsg" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="armory-tabs" id="armoryTabs" role="tablist"></div>
+      <div class="armory-grid" id="armoryGrid"></div>
+      <button class="cta" data-action="close-armory">返回</button>
+    </div>
+  </div>
+
+  <!-- ================= 印章簿 ================= -->
+  <div class="overlay" id="stampsOverlay" role="dialog" aria-modal="true" aria-labelledby="stampsTitle" hidden>
+    <div class="panel stamps-panel">
+      <h2 class="panel-title" id="stampsTitle"><span data-icon="seal"></span>印章簿</h2>
+      <p class="panel-sub" id="stampsSub"></p>
+      <div class="stamp-grid" id="stampGrid"></div>
+      <p class="stamp-note">每日玩一局就蓋一個印。連續 3 日送 20 金幣，每連續 7 日送 60 金幣。</p>
+      <button class="cta" data-action="close-stamps">好</button>
+    </div>
+  </div>
+
   <!-- ================= 開場倒數 ================= -->
   <div class="countdown" id="countdown" aria-live="assertive" hidden>
     <div class="cd-intro" id="cdIntro"></div>
@@ -187,6 +222,7 @@
       <div class="res-side">
         <ul class="res-stats" id="resStats"></ul>
         <p class="res-exp" id="resExp"></p>
+        <p class="res-quest" id="resQuest" hidden></p>
         <p class="res-unlock" id="resUnlock" hidden><span data-icon="unlock"></span>魔王級已解鎖</p>
         <div class="levelup" id="resLevelUp" hidden>
           <b>等級提升！</b><span id="resLevelDetail"></span>

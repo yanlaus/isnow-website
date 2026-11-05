@@ -2,6 +2,7 @@
 import { THREE, Scheduler, centerOnRect, fitCameraDistance, pickNearest, toScreen, randInt } from './engine.js';
 import { gradientTexture, Sparks, Embers, starField, makeGlow, blobShadow } from './fx.js';
 import { createHero, createGolem, createTorch } from './models.js';
+import { heroGear } from './gear.js';
 import { fmtTime } from './store.js';
 import { Sound, buzz } from './sound.js';
 import { icon } from './icons.js';
@@ -81,7 +82,7 @@ export class SimonView {
       return t;
     });
 
-    this.hero = createHero();
+    this.hero = createHero(heroGear());
     this.hero.group.scale.setScalar(1.35);
     this.heroBase = new THREE.Vector3(-1.9, 0, -2.3);
     this.hero.group.position.copy(this.heroBase);
@@ -113,6 +114,18 @@ export class SimonView {
     this.H = 1;
     this.crystalPx = 90;
     this.active = false;
+  }
+
+  /* 裝備屋換完裝即刻換勇者外觀（保留位置、方向、附加物） */
+  refreshHero(gear) {
+    const old = this.hero.group;
+    this.hero = createHero(gear);
+    const g = this.hero.group;
+    g.scale.copy(old.scale);
+    g.position.copy(old.position);
+    g.rotation.copy(old.rotation);
+    old.children.filter(c => c.userData.attach).forEach(c => g.add(c));
+    if (old.parent) { old.parent.add(g); old.parent.remove(old); }
   }
 
   hud(level) {

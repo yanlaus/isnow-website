@@ -3,6 +3,7 @@
 import { THREE, clamp, Scheduler, centerOnRect } from './engine.js';
 import { gradientTexture, Sparks } from './fx.js';
 import { createHero } from './models.js';
+import { heroGear } from './gear.js';
 import { Sound, buzz } from './sound.js';
 
 export const N = 1, E = 2, S = 4, W = 8;
@@ -35,7 +36,7 @@ export class GridWorld {
     this.world = new THREE.Group();
     this.scene.add(this.world);
 
-    this.hero = createHero();
+    this.hero = createHero(heroGear());
     this.hero.group.scale.setScalar(0.92);
     this.scene.add(this.hero.group);
     this.sparks = new Sparks(this.scene, { cap: 400, size: 0.32 });
@@ -54,6 +55,18 @@ export class GridWorld {
     this.minCell = 50;
     this.wallH = 0.42;
     this.alwaysFull = false;
+  }
+
+  /* 裝備屋換完裝即刻換勇者外觀（保留位置、方向、附加物） */
+  refreshHero(gear) {
+    const old = this.hero.group;
+    this.hero = createHero(gear);
+    const g = this.hero.group;
+    g.scale.copy(old.scale);
+    g.position.copy(old.position);
+    g.rotation.copy(old.rotation);
+    old.children.filter(c => c.userData.attach).forEach(c => g.add(c));
+    if (old.parent) { old.parent.add(g); old.parent.remove(old); }
   }
 
   idx(x, y) { return y * this.n + x; }

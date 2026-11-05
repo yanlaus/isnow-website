@@ -73,9 +73,11 @@ export class MazeView extends GridWorld {
     this.bgDark = gradientTexture(['#06050c', '#030307']);
     this.torch = new THREE.PointLight(0xffa64d, 0, 6, 1.6);
     this.torch.position.set(0, 1.1, 0.2);
+    this.torch.userData.attach = true;
     this.hero.group.add(this.torch);
     this.torchGlow = makeGlow(0xff9a3c, 1.4, 0);
     this.torchGlow.position.set(-0.3, 0.95, 0.15);
+    this.torchGlow.userData.attach = true;
     this.hero.group.add(this.torchGlow);
 
     this.chest = createChest();

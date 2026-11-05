@@ -1,10 +1,13 @@
 /* 腦力勇者 — 總控制：畫面、計時、結算、輸入（所有遊戲共用） */
-import { Engine, webglAvailable, rectOf } from './engine.js';
+import { Engine, webglAvailable, rectOf, snapshot } from './engine.js';
 import {
   save, persist, expToNext, titleFor, addExp, GAMES, CATEGORIES, gameIds, keyOf, isUnlocked, sizeLabel,
   starsTotal, starsMax, isBetter, fmtTime, fmtTimeHtml, fmtBest,
-  pushHistory, historyOf, markPlayed, playsInLastDays, streakDays,
+  pushHistory, historyOf, markPlayed, playsInLastDays, streakDays, dayKey, addGold,
 } from './store.js';
+import { createHero } from './models.js';
+import { SLOTS, GEAR, gearState, gearThumb, buyGear, equipGear, heroGear, gearKey, findGear } from './gear.js';
+import { today, recordPlay, questText, questGoal, questReward, stampWeeks, setGameList, COMPLETE_BONUS } from './daily.js';
 import { sparkline } from './charts.js';
 import { makeShareCard } from './share.js';
 import { Sound, buzz } from './sound.js';
@@ -250,7 +253,7 @@ async function start() {
      ========================================================= */
   const overlays = {
     diff: $('#diffOverlay'), records: $('#recordsOverlay'), result: $('#resultOverlay'), retreat: $('#retreatOverlay'),
-    share: $('#shareOverlay'),
+    share: $('#shareOverlay'), armory: $('#armoryOverlay'), stamps: $('#stampsOverlay'),
   };
   const countdownEl = $('#countdown');
   function openOverlay(el) {
@@ -380,9 +383,12 @@ async function start() {
     if (isRecord) save.best[key] = value;
     save.stars[key] = Math.max(save.stars[key] || 0, stars);
     save.plays += 1;
-    // 過關基本分 + 每粒星 10 + 額外獎勵
+    // 過關基本分 + 每粒星 10 + 額外獎勵；金幣：10 + 每粒星 5，破紀錄再加 10
     const expTotal = level.exp + stars * 10 + bonus;
     const lvl = addExp(expTotal);
+    const goldBase = 10 + stars * 5 + (isRecord && !firstClear ? 10 : 0);
+    addGold(goldBase);
+    const quest = recordPlay({ game, category: g.category, stars, isRecord, firstClear, firstToday: save.days[dayKey()] === 1 });
     persist();
     updateStatus();
 
@@ -405,7 +411,8 @@ async function start() {
     trend.hidden = !trend.innerHTML;
 
     $('#resStats').innerHTML = lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('');
-    $('#resExp').innerHTML = `獲得經驗值 <b>+${expTotal} EXP</b>`;
+    $('#resExp').innerHTML = `獲得 <b>+${expTotal} EXP</b><span class="res-gold">${icon('coin')}<b>+${goldBase + quest.gold}</b></span>`;
+    showQuestNote(quest);
     $('#resUnlock').hidden = !unlocksBoss;
 
     const lvBox = $('#resLevelUp');
@@ -431,6 +438,8 @@ async function start() {
       value: isScore ? `${score} ${g.unit}` : fmtTime(time),
       stars,
       note: firstClear ? '首次攻略！' : ((compare.querySelector('b.up') || {}).textContent || ''),
+      heroKey: `share-hero-${gearKey()}`,
+      buildHero: () => createHero(heroGear()),
       lv: save.level,
       playerTitle: titleFor(save.level),
       date: `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`,
@@ -438,6 +447,19 @@ async function start() {
     };
     shareCard = null;
     setTimeout(() => { if (shareInfo && !shareCard) shareCard = makeShareCard(shareInfo).catch(() => null); }, 900);
+  }
+
+  /* 結算畫面：今次完成咗嘅每日任務、連續日數獎勵 */
+  function showQuestNote(q) {
+    const parts = [];
+    if (q.done.length === 1) parts.push(`完成任務「${q.done[0].text}」`);
+    else if (q.done.length > 1) parts.push(`完成 ${q.done.length} 個任務`);
+    if (q.bonus) parts.push('今日全部完成！');
+    if (q.streakBonus) parts.push(`連續 ${q.streak} 日`);
+    const el = $('#resQuest');
+    el.innerHTML = parts.length ? `${icon('check')}<span>${parts.join('・')}</span>` : '';
+    el.title = q.done.map(d => d.text).join('、');
+    el.hidden = !parts.length;
   }
 
   /* 同上次／最佳比較（正面講法；「比上次差」就淡淡哋列出上次同最佳） */
@@ -619,6 +641,7 @@ async function start() {
       if (!overlays.retreat.hidden) { resumeFromRetreat(); return; }
       if (!overlays.diff.hidden) { closeDiff(); return; }
       if (!overlays.records.hidden) { closeOverlay(overlays.records); return; }
+      for (const o of [overlays.share, overlays.armory, overlays.stamps]) if (!o.hidden) { closeOverlay(o); return; }
       if (current !== 'menu' && !overlayOpen()) { requestRetreat(); return; }
     }
     const v = playView();
@@ -646,21 +669,25 @@ async function start() {
     $('#mLv').textContent = save.level;
     $('#mTitle').textContent = titleFor(save.level);
     $('#mExp').style.width = pct;
+    $('#mGold').textContent = save.gold || 0;
   }
   function renderMenu() {
     updateStatus();
     renderInstallTip();
+    renderDaily();
+    const featured = today().featured;
     const ids = availableGames();
     $('#gameGrid').innerHTML = CATEGORIES.map(c => {
       const games = ids.filter(id => GAMES[id].category === c.id);
       if (!games.length) return '';
       const cards = games.map(id => {
         const g = GAMES[id];
-        return `<button class="game-card cat-${g.category}" data-quest="${id}">
+        return `<button class="game-card cat-${g.category}${id === featured ? ' featured' : ''}" data-quest="${id}">
             <span class="gc-ico" aria-hidden="true">${icon(g.icon)}</span>
             <span class="gc-name">${g.title}</span>
             <span class="gc-tag">${g.tagline}</span>
             <span class="gc-stars">★ ${starsTotal(id)}/${starsMax(id)}</span>
+            ${id === featured ? '<span class="gc-feat">今日推介</span>' : ''}
           </button>`;
       }).join('');
       return `<section class="cat"><h2 class="cat-head">${icon(c.icon)}<span>${c.name}</span></h2><div class="cards">${cards}</div></section>`;
@@ -690,6 +717,85 @@ async function start() {
     navigator.serviceWorker.register('games-sw.js', { scope: 'games' }).catch(() => { /* 唔支援就照網上玩 */ });
   }
 
+  /* ---------- 今日任務卡 ---------- */
+  function renderDaily() {
+    const d = today();
+    const items = d.quests.map(q => {
+      const goal = questGoal(q);
+      const attrs = q.id === 'featured' && !q.done ? ` data-quest="${q.game}" role="button" tabindex="0"` : '';
+      return `<li class="dq${q.done ? ' done' : ''}${attrs ? ' link' : ''}"${attrs}>
+          <span class="dq-check">${icon(q.done ? 'check' : 'flag')}</span>
+          <span class="dq-text">${questText(q)}</span>
+          <span class="dq-prog">${Math.min(q.n, goal)}/${goal}</span>
+          <span class="dq-reward">${icon('coin')}${questReward(q)}</span>
+        </li>`;
+    }).join('');
+    $('#dailyCard').innerHTML = `
+      <div class="daily-head">
+        <h2 class="dh-title">${icon('flag')}今日任務</h2>
+        <span class="dh-streak">${icon('calendar')}連續 <b>${streakDays()}</b> 日</span>
+      </div>
+      <ul class="daily-list">${items}</ul>
+      <div class="daily-foot">
+        <span class="dq-bonus${d.bonus ? ' got' : ''}">${icon('chest')}${d.bonus ? '今日任務全部完成！' : `全部完成再送 ${COMPLETE_BONUS} 金幣`}</span>
+        <button class="ghost-btn" data-action="stamps">${icon('seal')}印章簿</button>
+      </div>`;
+  }
+
+  /* ---------- 印章簿 ---------- */
+  function openStamps() {
+    const weeks = stampWeeks();
+    const head = ['一', '二', '三', '四', '五', '六', '日'].map(d => `<span class="sg-head">${d}</span>`).join('');
+    const cells = weeks.flat().map(c => {
+      const cls = ['sg-day', c.n ? 'stamped' : '', c.today ? 'today' : '', c.future ? 'future' : ''].filter(Boolean).join(' ');
+      return `<span class="${cls}"${c.n ? ` title="玩咗 ${c.n} 局"` : ''}><i>${c.date.getDate()}</i>${c.n ? icon('seal', 'stamp') : ''}</span>`;
+    }).join('');
+    $('#stampGrid').innerHTML = head + cells;
+    const stamped = weeks.flat().filter(c => c.n).length;
+    $('#stampsSub').innerHTML = `最近四星期蓋咗 <b>${stamped}</b> 個印．連續 <b>${streakDays()}</b> 日．最近 7 日 <b>${playsInLastDays(7)}</b> 局`;
+    openOverlay(overlays.stamps);
+  }
+
+  /* ---------- 裝備屋 ---------- */
+  let armorySlot = 'sword';
+  function renderArmory(msg = '') {
+    $('#aGold').textContent = save.gold || 0;
+    $('#armoryMsg').textContent = msg;
+    const heroUrl = snapshot(`armory-hero-${gearKey()}`, () => {
+      const h = createHero(heroGear());
+      h.group.rotation.y = 0.45;
+      return h.group;
+    }, 200);
+    $('#armoryHero').hidden = !heroUrl;
+    if (heroUrl) $('#armoryHero').src = heroUrl;
+    $('#armoryTabs').innerHTML = SLOTS.map(s => `<button class="armory-tab${s.id === armorySlot ? ' on' : ''}" role="tab" aria-selected="${s.id === armorySlot}" data-slot="${s.id}">${icon(s.icon)}${s.name}</button>`).join('');
+    $('#armoryGrid').innerHTML = GEAR[armorySlot].map(item => {
+      const st = gearState(item);
+      const img = gearThumb(armorySlot, item);
+      let act;
+      if (st === 'equipped') act = `<span class="ar-state">${icon('check')}裝備中</span>`;
+      else if (st === 'owned') act = `<button class="ghost-btn ar-btn" data-gear-equip="${item.id}">裝備</button>`;
+      else if (st === 'buyable') act = `<button class="cta ar-btn" data-gear-buy="${item.id}">${icon('coin')}${item.price} 購買</button>`;
+      else if (st === 'locked') act = `<button class="ghost-btn ar-btn" disabled>${icon('lock')}Lv ${item.lv} 解鎖</button>`;
+      else act = `<button class="ghost-btn ar-btn" disabled>${icon('coin')}${item.price}</button><span class="ar-hint">仲差 ${item.price - (save.gold || 0)} 金幣</span>`;
+      return `<div class="ar-card${st === 'equipped' ? ' on' : ''}">
+          ${img ? `<img class="ar-img" src="${img}" alt="">` : ''}
+          <div class="ar-info"><b class="ar-name">${item.name}</b><span class="ar-desc">${item.desc}</span></div>
+          <div class="ar-act">${act}</div>
+        </div>`;
+    }).join('');
+  }
+  function openArmory() {
+    renderArmory();
+    openOverlay(overlays.armory);
+  }
+  function gearChanged(msg) {
+    renderArmory(msg);
+    menuView.refreshHero(heroGear());
+    updateStatus();
+    Object.values(views).forEach(v => { if (v !== menuView && v.refreshHero) v.refreshHero(heroGear()); });
+  }
+
   function renderMute() {
     $$('.mute-toggle').forEach(b => {
       b.innerHTML = icon(save.muted ? 'sound-off' : 'sound-on');
@@ -699,6 +805,20 @@ async function start() {
   }
 
   document.addEventListener('click', e => {
+    const slotBtn = e.target.closest('[data-slot]');
+    if (slotBtn) { armorySlot = slotBtn.dataset.slot; renderArmory(); return; }
+    const buy = e.target.closest('[data-gear-buy]');
+    if (buy) {
+      const id = buy.dataset.gearBuy;
+      if (buyGear(id)) { Sound.coin(); buzz(20); gearChanged(`買咗「${findGear(id).item.name}」，已經裝備！`); }
+      return;
+    }
+    const eq = e.target.closest('[data-gear-equip]');
+    if (eq) {
+      const id = eq.dataset.gearEquip;
+      if (equipGear(id)) { Sound.flip(); gearChanged(`換上「${findGear(id).item.name}」`); }
+      return;
+    }
     const quest = e.target.closest('[data-quest]');
     if (quest) { openDiff(quest.dataset.quest); return; }
     if (e.target.closest('.mute-toggle')) {
@@ -727,6 +847,10 @@ async function start() {
       case 'change-diff':   closeOverlay(overlays.result); if (session) openDiff(session.game); break;
       case 'home':          goMenu(); break;
       case 'share':         shareResult(); break;
+      case 'armory':        openArmory(); break;
+      case 'close-armory':  closeOverlay(overlays.armory); break;
+      case 'stamps':        openStamps(); break;
+      case 'close-stamps':  closeOverlay(overlays.stamps); break;
       case 'close-share':   closeOverlay(overlays.share); break;
       case 'install':
         if (installEvt) {
@@ -740,6 +864,7 @@ async function start() {
   });
   overlays.diff.addEventListener('click', e => { if (e.target === overlays.diff) closeDiff(); });
   overlays.records.addEventListener('click', e => { if (e.target === overlays.records) closeOverlay(overlays.records); });
+  [overlays.armory, overlays.stamps, overlays.share].forEach(o => o.addEventListener('click', e => { if (e.target === o) closeOverlay(o); }));
 
   // 自動測試用（網址加 ?debug 先會開）
   if (new URLSearchParams(location.search).has('debug')) {
@@ -751,6 +876,7 @@ async function start() {
 
   /* ---------- 啟動 ---------- */
   $$('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon, el.className); });
+  setGameList(availableGames());
   renderMute();
   showScreen('menu');
   await Promise.race([fontsReady, sleep(1200)]);

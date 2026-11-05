@@ -4,8 +4,255 @@ import { makeGlow, blobShadow } from './fx.js';
 
 const std = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, flatShading: true, ...opts });
 
-/* ===================== 勇者（正常比例騎士，頭身約 1:6） ===================== */
-export function createHero() {
+/* ===================== 勇者裝備（劍、盾、披風、頭盔）：勇者同裝備屋縮圖共用 ===================== */
+export const DEFAULT_GEAR = {
+  sword: { blade: 0xd5dbe4, len: 0.5, width: 0.032, guard: 'bar', metal: 0xc9a24a },
+  shield: { shape: 'kite', face: 0x23314f, emblem: 'cross', metal: 0xc9a24a },
+  cape: { color: 0x7a1f27 },
+  helm: { steel: 0x9aa3b2, crest: 0xc9a24a, plume: 0x7a1f27 },
+};
+
+export function buildSword(spec = {}) {
+  const s = { ...DEFAULT_GEAR.sword, ...spec };
+  const g = new THREE.Group();
+  const bladeMat = std(s.blade, { metalness: 0.8, roughness: 0.2, ...(s.emissive ? { emissive: s.emissive, emissiveIntensity: s.emissiveIntensity || 0.5 } : {}) });
+  const metal = std(s.metal, { metalness: 0.75, roughness: 0.3 });
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(s.width, s.len, 0.012), bladeMat);
+  blade.position.y = 0.05 + s.len / 2;
+  g.add(blade);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(s.width * 0.72, 0.06, 4), bladeMat);
+  tip.position.y = 0.08 + s.len;
+  tip.rotation.y = Math.PI / 4;
+  g.add(tip);
+  if (s.guard === 'wing') {
+    for (const k of [-1, 1]) {
+      const wing = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.1, 4), metal);
+      wing.rotation.z = -k * (Math.PI / 2 - 0.4);
+      wing.position.set(k * 0.055, 0.058, 0);
+      g.add(wing);
+    }
+  } else {
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.022, 0.03), metal);
+    guard.position.y = 0.045;
+    g.add(guard);
+  }
+  if (s.gem) {
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.022), std(s.gem, { emissive: s.gem, emissiveIntensity: 0.7, roughness: 0.15 }));
+    gem.position.set(0, 0.046, 0.016);
+    gem.scale.z = 0.6;
+    g.add(gem);
+  }
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.09, 6), std(0x3e2a1c, { roughness: 0.85 })));
+  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), s.gem ? std(s.gem, { emissive: s.gem, emissiveIntensity: 0.5, roughness: 0.2 }) : metal);
+  pommel.position.y = -0.05;
+  g.add(pommel);
+  if (s.glow) {
+    const gl = makeGlow(s.glow, 0.35 + s.len * 0.9, 0.5);
+    gl.position.y = 0.05 + s.len * 0.6;
+    g.add(gl);
+  }
+  return g;
+}
+
+function shieldShape(shape) {
+  const sh = new THREE.Shape();
+  if (shape === 'round') {
+    sh.absarc(0, 0, 0.145, 0, Math.PI * 2, false);
+  } else if (shape === 'heater') {
+    sh.moveTo(-0.125, 0.15);
+    sh.lineTo(0.125, 0.15);
+    sh.lineTo(0.125, 0.03);
+    sh.quadraticCurveTo(0.115, -0.1, 0, -0.18);
+    sh.quadraticCurveTo(-0.115, -0.1, -0.125, 0.03);
+    sh.lineTo(-0.125, 0.15);
+  } else {
+    sh.moveTo(0, 0.17);
+    sh.quadraticCurveTo(0.12, 0.16, 0.12, 0.06);
+    sh.quadraticCurveTo(0.1, -0.08, 0, -0.18);
+    sh.quadraticCurveTo(-0.1, -0.08, -0.12, 0.06);
+    sh.quadraticCurveTo(-0.12, 0.16, 0, 0.17);
+  }
+  return sh;
+}
+
+export function buildShield(spec = {}) {
+  const s = { ...DEFAULT_GEAR.shield, ...spec };
+  const g = new THREE.Group();
+  const metal = std(s.metal, { metalness: 0.75, roughness: 0.3 });
+  const geo = new THREE.ExtrudeGeometry(shieldShape(s.shape), { depth: 0.025, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 1 });
+  g.add(new THREE.Mesh(geo, std(s.face, { roughness: 0.6, metalness: s.faceMetal || 0.15 })));
+  if (s.rim) {
+    const rim = new THREE.Mesh(geo, metal);
+    rim.scale.set(1.1, 1.08, 0.6);
+    rim.position.z = -0.006;
+    g.add(rim);
+  }
+  const z = 0.042;
+  const box = (w, h, x, y) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.012), metal); m.position.set(x, y, z); g.add(m); return m; };
+  if (s.emblem === 'cross') {
+    box(0.022, 0.24, 0, -0.01);
+    box(0.15, 0.022, 0, 0.06);
+  } else if (s.emblem === 'crown') {
+    box(0.13, 0.03, 0, -0.02);
+    [-0.05, 0, 0.05].forEach((x, i) => {
+      const c = new THREE.Mesh(new THREE.ConeGeometry(0.02, i === 1 ? 0.08 : 0.06, 4), metal);
+      c.position.set(x, i === 1 ? 0.035 : 0.025, z);
+      c.scale.z = 0.4;
+      g.add(c);
+    });
+    const jewel = new THREE.Mesh(new THREE.OctahedronGeometry(0.016), std(0xc8243c, { emissive: 0xc8243c, emissiveIntensity: 0.5 }));
+    jewel.position.set(0, -0.02, z + 0.01);
+    g.add(jewel);
+  } else if (s.emblem === 'moon') {
+    const moon = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.016, 5, 16, Math.PI * 1.25), metal);
+    moon.rotation.z = Math.PI * 0.62;
+    moon.position.set(0.008, 0.0, z);
+    g.add(moon);
+    const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.018), metal);
+    star.position.set(0.02, 0.01, z);
+    star.scale.z = 0.4;
+    g.add(star);
+  } else if (s.emblem === 'sun') {
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 16), metal);
+    disc.rotation.x = Math.PI / 2;
+    disc.position.set(0, 0, z);
+    g.add(disc);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const r = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.04, 4), metal);
+      r.position.set(Math.cos(a) * 0.065, Math.sin(a) * 0.065, z);
+      r.rotation.z = a - Math.PI / 2;
+      r.scale.z = 0.4;
+      g.add(r);
+    }
+  }
+  if (s.glow) {
+    const gl = makeGlow(s.glow, 0.5, 0.35);
+    gl.position.z = 0.05;
+    g.add(gl);
+  }
+  return g;
+}
+
+/* 披風：PlaneGeometry（之後逐點擺動）；trim＝下擺金邊（vertex color） */
+export function capeGeometry(spec = {}) {
+  const s = { ...DEFAULT_GEAR.cape, ...spec };
+  const geo = new THREE.PlaneGeometry(0.34, 0.66, 2, 12);
+  geo.translate(0, -0.33, 0);
+  let mat;
+  if (s.trim != null) {
+    const pos = geo.attributes.position;
+    const base = new THREE.Color(s.color), trim = new THREE.Color(s.trim);
+    const cols = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const c = pos.getY(i) < -0.6 || Math.abs(pos.getX(i)) > 0.16 ? trim : base;
+      cols.set([c.r, c.g, c.b], i * 3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    mat = std(0xffffff, { vertexColors: true, roughness: 0.8, side: THREE.DoubleSide });
+  } else {
+    mat = std(s.color, { roughness: 0.8, side: THREE.DoubleSide });
+  }
+  return { geo, mat };
+}
+/* 裝備屋縮圖：掛喺金棍上嘅披風 */
+export function buildCapeThumb(spec = {}) {
+  const g = new THREE.Group();
+  const { geo, mat } = capeGeometry(spec);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    pos.setZ(i, -Math.cos((x / 0.17) * 1.2) * 0.04 - (y / 0.66) * (y / 0.66) * 0.03 + Math.sin(y * 9 + x * 6) * 0.012);
+  }
+  geo.computeVertexNormals();
+  g.add(new THREE.Mesh(geo, mat));
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.42, 6), std(0xc9a24a, { metalness: 0.75, roughness: 0.3 }));
+  rod.rotation.z = Math.PI / 2;
+  g.add(rod);
+  for (const k of [-1, 1]) {
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 6), std(0xc9a24a, { metalness: 0.75, roughness: 0.3 }));
+    knob.position.x = k * 0.21;
+    g.add(knob);
+  }
+  g.rotation.y = -0.35;
+  return g;
+}
+
+/* 頭盔：原點喺頭盔底中心（勇者頭部 y≈0.915） */
+export function buildHelm(spec = {}) {
+  const s = { ...DEFAULT_GEAR.helm, ...spec };
+  const g = new THREE.Group();
+  const steel = std(s.steel, { metalness: 0.65, roughness: 0.35 });
+  const crest = std(s.crest, { metalness: 0.75, roughness: 0.3 });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.088, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), steel);
+  dome.scale.set(1, 1.08, 1.05);
+  g.add(dome);
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.07, 0.016), steel);
+  nose.position.set(0, -0.015, 0.086);
+  g.add(nose);
+  for (const k of [-1, 1]) {
+    const cheek = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.07), steel);
+    cheek.position.set(0.08 * k, -0.035, 0.02);
+    g.add(cheek);
+  }
+  if (!s.crown) {
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.03, 0.17), crest);
+    ridge.position.set(0, 0.085, -0.01);
+    g.add(ridge);
+  }
+  if (s.plume != null) {
+    const plume = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.2, 6), std(s.plume, { roughness: 0.8, side: THREE.DoubleSide }));
+    plume.position.set(0, 0.115, -0.09);
+    plume.rotation.x = -1.15;
+    g.add(plume);
+  }
+  if (s.wings != null) {
+    const wingMat = std(s.wings, { metalness: 0.5, roughness: 0.35, side: THREE.DoubleSide });
+    const w = new THREE.Shape();
+    w.moveTo(0, 0);
+    w.quadraticCurveTo(0.03, 0.09, 0.02, 0.15);
+    w.lineTo(0.045, 0.1);
+    w.lineTo(0.06, 0.12);
+    w.lineTo(0.07, 0.07);
+    w.lineTo(0.085, 0.08);
+    w.quadraticCurveTo(0.07, 0.02, 0, 0);
+    for (const k of [-1, 1]) {
+      const m = new THREE.Mesh(new THREE.ShapeGeometry(w), wingMat);
+      m.scale.x = -k;
+      m.position.set(0.085 * k, 0.02, -0.01);
+      m.rotation.y = k * 1.2;
+      m.rotation.z = -k * 0.25;
+      g.add(m);
+    }
+  }
+  if (s.crown) {
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.084, 0.09, 0.03, 12, 1, true), std(s.crown, { metalness: 0.8, roughness: 0.25, side: THREE.DoubleSide }));
+    band.position.y = 0.045;
+    g.add(band);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const p = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.05, 4), std(s.crown, { metalness: 0.8, roughness: 0.25 }));
+      p.position.set(Math.sin(a) * 0.082, 0.083, Math.cos(a) * 0.082);
+      g.add(p);
+    }
+    const jewel = new THREE.Mesh(new THREE.OctahedronGeometry(0.018), std(0x2a5fd0, { emissive: 0x2a5fd0, emissiveIntensity: 0.6 }));
+    jewel.position.set(0, 0.048, 0.092);
+    g.add(jewel);
+  }
+  if (s.horns != null) {
+    const horn = std(s.horns, { metalness: 0.5, roughness: 0.35 });
+    for (const k of [-1, 1]) {
+      const h = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.016, 5, 10, Math.PI * 0.6), horn);
+      h.position.set(0.07 * k, 0.04, 0);
+      h.rotation.set(0, k > 0 ? 0 : Math.PI, 0.35);
+      g.add(h);
+    }
+  }
+  return g;
+}
+
+/* ===================== 勇者（正常比例騎士，頭身約 1:6）；gear＝各部位 spec ===================== */
+export function createHero(gear = {}) {
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
@@ -13,8 +260,7 @@ export function createHero() {
   const skin = std(0xd9ad88, { roughness: 0.65 });
   const steel = std(0x9aa3b2, { metalness: 0.65, roughness: 0.35 });
   const darkSteel = std(0x4f5766, { metalness: 0.55, roughness: 0.45 });
-  const navy = std(0x23314f, { roughness: 0.75 });
-  const crimson = std(0x7a1f27, { roughness: 0.8, side: THREE.DoubleSide });
+  const navy = std(gear.tunic || 0x23314f, { roughness: 0.75 });
   const gold = std(0xc9a24a, { metalness: 0.75, roughness: 0.3 });
   const leather = std(0x3e2a1c, { roughness: 0.85 });
   const add = (geo, mat, x, y, z, parent = body) => {
@@ -50,61 +296,27 @@ export function createHero() {
     arm.rotation.z = 0.08 * s;
     add(new THREE.BoxGeometry(0.06, 0.07, 0.06), steel, 0.205 * s, 0.47, 0.02);
   }
-  // 頭、頭盔（護鼻、冠飾、羽飾）
+  // 頭 + 頭盔
   add(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 6), skin, 0, 0.845, 0);
   add(new THREE.SphereGeometry(0.078, 12, 10), skin, 0, 0.905, 0.005);
-  const helm = add(new THREE.SphereGeometry(0.088, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), steel, 0, 0.915, 0);
-  helm.scale.set(1, 1.08, 1.05);
-  add(new THREE.BoxGeometry(0.016, 0.07, 0.016), steel, 0, 0.9, 0.086);
-  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.02, 0.06, 0.07), steel, 0.08 * s, 0.88, 0.02);
-  add(new THREE.BoxGeometry(0.016, 0.03, 0.17), gold, 0, 1.0, -0.01);
-  const plume = add(new THREE.ConeGeometry(0.03, 0.2, 6), crimson, 0, 1.03, -0.09);
-  plume.rotation.x = -1.15;
+  const helm = buildHelm(gear.helm);
+  helm.position.set(0, 0.915, 0);
+  body.add(helm);
 
   // 披風（肩到小腿）
-  const capeGeo = new THREE.PlaneGeometry(0.34, 0.66, 2, 8);
-  capeGeo.translate(0, -0.33, 0);
-  const cape = add(capeGeo, crimson, 0, 0.8, -0.13);
+  const { geo: capeGeo, mat: capeMat } = capeGeometry(gear.cape);
+  const cape = add(capeGeo, capeMat, 0, 0.8, -0.13);
   cape.rotation.x = 0.1;
   const capeBase = capeGeo.attributes.position.array.slice();
 
-  // 鳶形盾（左手，喺 +x）
-  const kite = new THREE.Shape();
-  kite.moveTo(0, 0.17);
-  kite.quadraticCurveTo(0.12, 0.16, 0.12, 0.06);
-  kite.quadraticCurveTo(0.1, -0.08, 0, -0.18);
-  kite.quadraticCurveTo(-0.1, -0.08, -0.12, 0.06);
-  kite.quadraticCurveTo(-0.12, 0.16, 0, 0.17);
-  const shield = new THREE.Group();
-  const face = new THREE.Mesh(new THREE.ExtrudeGeometry(kite, { depth: 0.025, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 1 }), navy);
-  shield.add(face);
-  const cross1 = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.24, 0.012), gold);
-  cross1.position.set(0, -0.01, 0.042);
-  shield.add(cross1);
-  const cross2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.022, 0.012), gold);
-  cross2.position.set(0, 0.06, 0.042);
-  shield.add(cross2);
+  // 盾（左手，喺 +x）
+  const shield = buildShield(gear.shield);
   shield.position.set(0.235, 0.58, 0.05);
   shield.rotation.y = 0.55;
   body.add(shield);
 
-  // 長劍（右手，喺 -x），劍尖向上
-  const sword = new THREE.Group();
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.5, 0.012), std(0xd5dbe4, { metalness: 0.8, roughness: 0.2 }));
-  blade.position.y = 0.3;
-  sword.add(blade);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.023, 0.06, 4), blade.material);
-  tip.position.y = 0.58;
-  tip.rotation.y = Math.PI / 4;
-  sword.add(tip);
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.022, 0.03), gold);
-  guard.position.y = 0.045;
-  sword.add(guard);
-  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.09, 6), leather);
-  sword.add(grip);
-  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), gold);
-  pommel.position.y = -0.05;
-  sword.add(pommel);
+  // 劍（右手，喺 -x），劍尖向上
+  const sword = buildSword(gear.sword);
   sword.position.set(-0.215, 0.45, 0.07);
   sword.rotation.z = 0.06;
   body.add(sword);
