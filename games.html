@@ -66,6 +66,11 @@
           </div>
         </div>
         <section class="daily-card frame" id="dailyCard" aria-label="今日任務"></section>
+        <button class="duel-entry frame" data-action="duel-open">
+          <span class="de-ico"><span data-icon="swords"></span></span>
+          <span class="de-text"><b>對決擂台・雙人</b><small>兩人對坐 iPad 兩邊，同時鬥快！</small></span>
+          <span class="de-go"><span data-icon="right"></span></span>
+        </button>
         <div id="gameGrid"></div>
         <div class="menu-actions">
           <button class="ghost-btn" data-action="armory"><span data-icon="shield"></span>裝備屋</button>
@@ -132,6 +137,31 @@
       <div class="panel-body" id="panelBody"></div>
     </div>
 
+    <!-- 對決擂台：兩邊玩家面對面（上／左＝紅騎士，下／右＝藍騎士） -->
+    <div class="mode duel-mode" data-mode="duel">
+      <div class="duel-half red" data-side="1">
+        <div class="dh-inner">
+          <div class="dh-bar"><span class="dh-name"></span><span class="dh-pips"></span><span class="dh-foe"></span></div>
+          <div class="dh-prompt"></div>
+          <div class="dh-pad"></div>
+          <p class="dh-msg"></p>
+        </div>
+      </div>
+      <div class="duel-mid">
+        <div class="duel-view" data-region="view1"></div>
+        <button class="round-btn duel-pause" data-action="retreat" aria-label="暫停"><span data-icon="pause"></span></button>
+        <div class="duel-view" data-region="view0"></div>
+      </div>
+      <div class="duel-half blue" data-side="0">
+        <div class="dh-inner">
+          <div class="dh-bar"><span class="dh-name"></span><span class="dh-pips"></span><span class="dh-foe"></span></div>
+          <div class="dh-prompt"></div>
+          <div class="dh-pad"></div>
+          <p class="dh-msg"></p>
+        </div>
+      </div>
+    </div>
+
     <div class="popups" id="popups" aria-hidden="true"></div>
   </section>
 
@@ -168,6 +198,31 @@
       </div>
       <div class="rec-list" id="recList"></div>
       <button class="cta" data-action="close-records">好</button>
+    </div>
+  </div>
+
+  <!-- ================= 對決設定 ================= -->
+  <div class="overlay" id="duelOverlay" role="dialog" aria-modal="true" aria-labelledby="duelTitle" hidden>
+    <div class="panel duel-panel">
+      <h2 class="panel-title" id="duelTitle"><span data-icon="swords"></span>對決擂台</h2>
+      <p class="panel-sub">兩人對坐，將 iPad 平放喺中間，各自用自己面前嗰一半畫面。</p>
+      <p class="duel-phone-note" id="duelPhoneNote" hidden>手機畫面比較細，建議用 iPad 玩。</p>
+      <h3 class="dl-head">遊戲</h3>
+      <div class="duel-games" id="duelGames"></div>
+      <div class="duel-opts">
+        <div>
+          <h3 class="dl-head">速度</h3>
+          <div class="seg" id="duelSpeed"><button data-speed="easy">輕鬆</button><button data-speed="normal">標準</button></div>
+        </div>
+        <div>
+          <h3 class="dl-head">煲數</h3>
+          <div class="seg" id="duelNeed"><button data-need="2">三煲兩勝</button><button data-need="3">五煲三勝</button></div>
+        </div>
+      </div>
+      <div class="stack">
+        <button class="cta" data-action="duel-start"><span data-icon="swords"></span>開戰！</button>
+        <button class="ghost-btn" data-action="close-duel">返回</button>
+      </div>
     </div>
   </div>
 

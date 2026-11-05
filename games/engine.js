@@ -135,7 +135,9 @@ export class Engine {
     if (!this.view) return;
     // 暫停時（撤退確認視窗）遊戲邏輯停低，畫面照畫
     this.view.update(this.view.paused ? 0 : dt, now / 1000);
-    this.renderer.render(this.view.scene, this.view.camera);
+    // 對決擂台：一個場景畫兩次（兩邊玩家各自方向）
+    if (this.view.render) this.view.render(this.renderer, this.w, this.h);
+    else this.renderer.render(this.view.scene, this.view.camera);
   }
 }
 

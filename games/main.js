@@ -22,6 +22,8 @@ import { MahjongView } from './mahjong.js';
 import { WhackView } from './whack.js';
 import { ShopView } from './shop.js';
 import { IdiomView } from './idiom.js';
+import { DuelView } from './duel.js';
+import { ROUNDS, DUEL_GAMES } from './duel-rounds.js';
 
 /* 已經做好嘅遊戲（未登記嘅唔會喺主選單出現） */
 const VIEW_CLASSES = {
@@ -253,7 +255,7 @@ async function start() {
      ========================================================= */
   const overlays = {
     diff: $('#diffOverlay'), records: $('#recordsOverlay'), result: $('#resultOverlay'), retreat: $('#retreatOverlay'),
-    share: $('#shareOverlay'), armory: $('#armoryOverlay'), stamps: $('#stampsOverlay'),
+    share: $('#shareOverlay'), armory: $('#armoryOverlay'), stamps: $('#stampsOverlay'), duel: $('#duelOverlay'),
   };
   const countdownEl = $('#countdown');
   function openOverlay(el) {
@@ -363,6 +365,74 @@ async function start() {
       if (hud.startMsg) toast(hud.startMsg);
     });
   }
+
+  /* =========================================================
+     對決擂台（iPad 面對面雙人）
+     ========================================================= */
+  const duelCfg = Object.assign({ game: 'mix', speed: 'easy', need: 3 }, save.duelCfg || {});
+  if (!DUEL_GAMES.includes(duelCfg.game)) duelCfg.game = 'mix';
+  function getDuel() {
+    if (!views.duel) views.duel = new DuelView({ ...hooks, duelFinish });
+    return views.duel;
+  }
+  function renderDuelSetup() {
+    $('#duelGames').innerHTML = DUEL_GAMES.map(id => {
+      const r = id === 'mix' ? { name: '混合賽', icon: 'mix', sub: '每煲換一款' } : { ...ROUNDS[id], sub: '' };
+      return `<button class="duel-game${duelCfg.game === id ? ' on' : ''}" data-dgame="${id}" aria-pressed="${duelCfg.game === id}">${icon(r.icon)}<b>${r.name}</b>${r.sub ? `<small>${r.sub}</small>` : ''}</button>`;
+    }).join('');
+    $$('#duelSpeed [data-speed]').forEach(b => b.classList.toggle('on', b.dataset.speed === duelCfg.speed));
+    $$('#duelNeed [data-need]').forEach(b => b.classList.toggle('on', Number(b.dataset.need) === duelCfg.need));
+    $('#duelPhoneNote').hidden = Math.min(window.innerWidth, window.innerHeight) >= 600;
+  }
+  function openDuelSetup() {
+    renderDuelSetup();
+    openOverlay(overlays.duel);
+  }
+  async function startDuel() {
+    closeAllOverlays();
+    abortGame();
+    save.duelCfg = { ...duelCfg };
+    persist();
+    session = { game: 'duel', level: null };
+    if (!inGameHistory) {
+      try { history.pushState({ brainHero: 'game' }, ''); inGameHistory = true; } catch (_) { /* file:// */ }
+    }
+    await fontsReady;
+    const view = getDuel();
+    view.setup({ ...duelCfg });
+    gameEl.dataset.mode = 'duel';
+    showScreen('duel');
+    live = true;
+    measure();
+    view.begin();
+  }
+  function duelFinish() {
+    if (!live) return null;
+    live = false;
+    save.plays += 1;
+    markPlayed();
+    const exp = 20;
+    const lvl = addExp(exp);
+    addGold(10);
+    const q = recordPlay({ game: 'duel', category: 'duel', stars: 0, isRecord: false, firstClear: false, duel: true, firstToday: save.days[dayKey()] === 1 });
+    persist();
+    updateStatus();
+    let text = `獲得 +${exp} EXP・金幣 +${10 + q.gold}`;
+    if (q.done.length) text += `・完成 ${q.done.length} 個任務`;
+    if (lvl.leveled) {
+      text += `・升到 Lv ${lvl.to}！`;
+      setTimeout(() => { Sound.levelUp(); buzz([30, 30, 30, 30, 60]); }, 1200);
+    }
+    return { text };
+  }
+  // 對決按鈕用 pointerdown：即時、兩隻手指同時撳都各自計
+  $('.duel-mode').addEventListener('pointerdown', e => {
+    const b = e.target.closest('[data-duel]');
+    if (!b || current !== 'duel' || overlayOpen()) return;
+    e.preventDefault();
+    const half = b.closest('.duel-half');
+    if (half) getDuel().press(Number(half.dataset.side), b.dataset.duel, e.timeStamp, b);
+  });
 
   /* =========================================================
      戰果結算
@@ -641,7 +711,7 @@ async function start() {
       if (!overlays.retreat.hidden) { resumeFromRetreat(); return; }
       if (!overlays.diff.hidden) { closeDiff(); return; }
       if (!overlays.records.hidden) { closeOverlay(overlays.records); return; }
-      for (const o of [overlays.share, overlays.armory, overlays.stamps]) if (!o.hidden) { closeOverlay(o); return; }
+      for (const o of [overlays.share, overlays.armory, overlays.stamps, overlays.duel]) if (!o.hidden) { closeOverlay(o); return; }
       if (current !== 'menu' && !overlayOpen()) { requestRetreat(); return; }
     }
     const v = playView();
@@ -805,6 +875,12 @@ async function start() {
   }
 
   document.addEventListener('click', e => {
+    const dg = e.target.closest('[data-dgame]');
+    if (dg) { duelCfg.game = dg.dataset.dgame; renderDuelSetup(); return; }
+    const sp = e.target.closest('[data-speed]');
+    if (sp) { duelCfg.speed = sp.dataset.speed; renderDuelSetup(); return; }
+    const nd = e.target.closest('[data-need]');
+    if (nd) { duelCfg.need = Number(nd.dataset.need); renderDuelSetup(); return; }
     const slotBtn = e.target.closest('[data-slot]');
     if (slotBtn) { armorySlot = slotBtn.dataset.slot; renderArmory(); return; }
     const buy = e.target.closest('[data-gear-buy]');
@@ -848,6 +924,11 @@ async function start() {
       case 'home':          goMenu(); break;
       case 'share':         shareResult(); break;
       case 'armory':        openArmory(); break;
+      case 'duel-open':     openDuelSetup(); break;
+      case 'duel-setup':    openDuelSetup(); break;
+      case 'close-duel':    closeOverlay(overlays.duel); break;
+      case 'duel-start':
+      case 'duel-again':    startDuel(); break;
       case 'close-armory':  closeOverlay(overlays.armory); break;
       case 'stamps':        openStamps(); break;
       case 'close-stamps':  closeOverlay(overlays.stamps); break;
@@ -864,12 +945,12 @@ async function start() {
   });
   overlays.diff.addEventListener('click', e => { if (e.target === overlays.diff) closeDiff(); });
   overlays.records.addEventListener('click', e => { if (e.target === overlays.records) closeOverlay(overlays.records); });
-  [overlays.armory, overlays.stamps, overlays.share].forEach(o => o.addEventListener('click', e => { if (e.target === o) closeOverlay(o); }));
+  [overlays.armory, overlays.stamps, overlays.share, overlays.duel].forEach(o => o.addEventListener('click', e => { if (e.target === o) closeOverlay(o); }));
 
   // 自動測試用（網址加 ?debug 先會開）
   if (new URLSearchParams(location.search).has('debug')) {
     window.__bh = {
-      views, getView, engine, Timer, save,
+      views, getView, engine, Timer, save, getDuel,
       shareUrl: () => (shareCard || (shareInfo ? makeShareCard(shareInfo) : Promise.resolve(null))).then(c => c && c.url),
     };
   }
