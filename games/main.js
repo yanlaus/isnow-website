@@ -522,7 +522,7 @@ async function start() {
   /* 結算畫面：今次完成咗嘅每日任務、連續日數獎勵 */
   function showQuestNote(q) {
     const parts = [];
-    if (q.done.length === 1) parts.push(`完成任務「${q.done[0].text}」`);
+    if (q.done.length === 1) parts.push(`完成任務：${q.done[0].text}`);
     else if (q.done.length > 1) parts.push(`完成 ${q.done.length} 個任務`);
     if (q.bonus) parts.push('今日全部完成！');
     if (q.streakBonus) parts.push(`連續 ${q.streak} 日`);
